@@ -1,13 +1,15 @@
 # controle de estoque de lentes
 
+from system.lens import *
+
 print("""[1] para cadastrar lente.
 [2] para visualizar estoque.""")
-option = int(input('Digite uma opção: '))
+option = read_whole('Digite uma opção: ')
 if option == 1:
     print('Option one')
     try:
         while True:
-            origin = int(input('Filhal: '))  # Identifies the branch you are adding to inventory
+            origin = read_whole('Filhal: ')  # Identifies the branch you are adding to inventory
             #  Menu
             print("""        [1] para orgânica
             [2] para poly
