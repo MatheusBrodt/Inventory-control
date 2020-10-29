@@ -10,4 +10,4 @@ def read_whole(txt):
                 loop = True
                 return int(validate)
     except (ValueError, TypeError):
-        print('\033[33mErro ao identificar o valor digitado na opção.\03[m')
+        print('\033[33mErro ao identificar o valor digitado na opção.\033[m')
