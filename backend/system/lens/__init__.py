@@ -311,10 +311,3 @@ def read_eye(value):
                 continue
     except:
         print('\033[31mERRO ao identificar lado da lente!\033[m')
-
-
-def read_excel():
-    import pandas as pd
-    x = pd.read_excel(r"C:\Users\Matheus Brodt\Downloads\codigo_barras.xlxs")
-    print(x)
-
