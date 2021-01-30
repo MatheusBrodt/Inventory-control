@@ -241,9 +241,6 @@ def register_diopter(lab, material, sphe_diopter, cyl_diopter, add, eye, amount)
         cursor.execute(f"UPDATE stock SET amount = amount+{amount_1} WHERE laboratory = '{laboratory[f'{lab_1}']}' "
                        f"AND spherical = {spherical} AND cylindrical = {cylinder} AND "
                        f"material = '{lens[f'{material_1}']}' AND eye = '{opt_eye}' AND adicao = {adicao}")
-        print(f"UPDATE stock SET amount = amount+{amount_1} WHERE laboratory = '{laboratory[f'{lab_1}']}' "
-                       f"AND spherical = {spherical} AND cylindrical = {cylinder} AND "
-                       f"material = '{lens[f'{material_1}']}' AND eye = '{opt_eye}' AND adicao = {adicao}")
         conection.commit()
         print('\033[33mLente cadastrada com sucesso!\033[m')
     except:
@@ -314,3 +311,10 @@ def read_eye(value):
                 continue
     except:
         print('\033[31mERRO ao identificar lado da lente!\033[m')
+
+
+def read_excel():
+    import pandas as pd
+    x = pd.read_excel(r"C:\Users\Matheus Brodt\Downloads\codigo_barras.xlxs")
+    print(x)
+

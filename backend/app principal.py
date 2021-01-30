@@ -1,6 +1,7 @@
 # controle de estoque de lentes
 
 from system.lens import *
+
 loop = False
 
 try:
