@@ -1,6 +1,6 @@
 # controle de estoque de lentes
 
-from backend.system.lens import *
+from system.lens import *
 
 loop = False
 
