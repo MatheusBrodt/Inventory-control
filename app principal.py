@@ -16,16 +16,32 @@ try:
             record_type = read_whole('[1] para adicionar pelo código de barras.\n'
                                      '[2] para adicionar pela dioptria.\n'
                                      '[3] para retornar ao menu anterior: \nDigite: ')
-            if record_type == 1:  # adicionar atraves do codigo de barras
-                while True:
-                    register_cod('Digite o código de barras: ', 'Digite a quantidade: ')
-                    opt = int(input('[1] Para cotinuar. [2] Para sair.'))
-                    if opt == 1:
-                        continue
-                    elif opt == 2:
-                        break
-                    else:
-                        print('Opção Inválida')
+            if record_type == 1:  # adicionar atraves do codigo de barras 1 a 1
+                print('[1] para registrar uma à uma.'
+                      '[2] para selecionar a quantidade.')
+                register_type = read_whole('Digite: ')
+                if register_type == 1:
+                    while True:
+                        cod_barras = read_whole('Digite o código de barras: ')
+                        if cod_barras == 0:
+                            break
+                        register_cod_one(cod_barras)
+                elif register_type == 2:
+                    while True:
+                        cod_barras = read_whole('Digite o código de barras: ')
+                        amount = read_whole('Digite a quantidade: ')
+                        register_cod(cod_barras, amount)
+                        print('[1] para continuar: '
+                              '[2] para finalizar: ')
+                        opt = read_whole('Digite: ')
+                        if opt == 1:
+                            continue
+                        elif opt == 2:
+                            break
+                        else:
+                            print('\033[33mOpção Inválida!\033[m')
+                else:
+                    print('\033[31mOpção Inválida\033[m')
             elif record_type == 2:  # adicionar atraves da dioptria e do material da lente
                 while True:
                     menu()

@@ -55,11 +55,24 @@ def search(lab, material, sph_diopter, cyl_diopter, add, eye):
         return False
 
 
+def register_cod_one(cod):
+    import mysql.connector
+    try:
+        bar_code = cod
+        conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
+        cursor = conection.cursor()
+        cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {bar_code}")
+        conection.commit()
+        print('\033[34mLente cadastrada com sucesso!\033[m')
+    except:
+        print('\033[31mErro ao cadastrar a lente!\033[m')
+
+
 def register_cod(cod, amount):
     import mysql.connector
     try:
-        bar_code = read_whole(cod)
-        amount_1 = read_whole(amount)
+        bar_code = cod
+        amount_1 = amount
         conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
         cursor = conection.cursor()
         cursor.execute(f"UPDATE stock SET amount = amount+{amount_1} WHERE cod_barras = {bar_code}")
