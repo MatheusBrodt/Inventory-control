@@ -42,7 +42,6 @@ def search(lab, material, sph_diopter, cyl_diopter, add, eye):
                        f"AND eye = '{opt_eye}' AND material = {material_1} "
                        f"AND laboratory = '{laboratory[f'{lab_1}']}' AND adicao = {adicao}")
         result = cursor.fetchone()
-        print('check')
         for r in result:
             if r <= 0:
                 print('\033[33mALERTA! LENTE EM FALTA NO ESTOQUE.\033[m')
