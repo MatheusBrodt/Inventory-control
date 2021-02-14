@@ -153,8 +153,9 @@ def zero(lab, material):
         print(f'\033[31mErro ao pesquisar grade zerada no estoque!\033[m')
 
 
-def exit_stock(lab, material, sph_diopter, cyl_diopter, add, eye, amount):
+def exit_stock(lab, material, sph_diopter, cyl_diopter, add, eye, amount, loja, motivo):
     import mysql.connector
+    from datetime import date
     lens = {'1': 'Lente Vis Simples 1.50 c/A.R.', '2': 'Lente Vis Simples 1.56 c/A.R.',
             '3': 'Lente V.S. 1.56 Filtro Azul c/A.R.', '4': 'Lente Ac. Progressiva 1.56 c/A.R.',
             '5': 'Lente Vis Simp 1.59 Poly c/A.R.', '6': 'zeiss_platinum',
@@ -167,17 +168,37 @@ def exit_stock(lab, material, sph_diopter, cyl_diopter, add, eye, amount):
     adicao = read_diopter(add)
     opt_eye = read_eye(eye)
     amount_1 = read_whole(amount)
-    if read_zero_diopter(spherical, cylindrical, adicao, opt_eye, mat, lab_1):
-        try:
+    store = read_store(loja)
+    print('\033[35m[1] para quebra.\n'
+          '[2] para montagem.\n'
+          '[3] para garantia.\033[m')
+    reason = read_reason(motivo)
+    try:
+        conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
+        cursor = conection.cursor()  # para capturar o codigo da lente
+        cursor.execute(f"SELECT cod_barras FROM stock WHERE spherical = {spherical} "
+                       f"AND cylindrical = -{cylindrical} AND adicao = {adicao} AND eye = '{opt_eye}' "
+                       f"AND material = '{lens[f'{mat}']}' AND laboratory = '{laboratory[f'{lab_1}']}'")
+        cod = cursor.fetchone()
+        conection.close()
+        if read_zero_cod(cod[0]):
             conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
-            cursor = conection.cursor()
+            cursor = conection.cursor()  # para retirar a lente
             cursor.execute(f"UPDATE stock SET amount = amount-{amount_1} WHERE spherical = {spherical} "
-                           f"AND cylindrical = {cylindrical} AND adicao = {adicao} AND eye = '{opt_eye}' "
+                           f"AND cylindrical = -{cylindrical} AND adicao = {adicao} AND eye = '{opt_eye}' "
                            f"AND material = '{lens[f'{mat}']}' AND laboratory = '{laboratory[f'{lab_1}']}'")
             print('\033[34mLente retirarda do estoque com sucesso!\033[m')
             conection.commit()
-        except:
-            print('\033[31mErro ao retirar a lente do estoque!\033[m')
+
+            cursor = conection.cursor()  # para adicionar à tabela de saída
+            cursor.execute(f"INSERT INTO store "
+                           f"(cod_barras, lens, store, reason, data) "
+                           f"VALUES "
+                           f"({cod[0]}, '{laboratory[f'{lab_1}']}', {store}, '{reason}', '{date.today()}')")
+            print('\033[34mLente cadastrada na tabela de saída!\033[m')
+            conection.commit()
+    except:
+        print('\033[31mErro ao acessar o banco de dados!\033[m')
 
 
 def read_lab(txt):
@@ -268,17 +289,18 @@ def read_zero_cod(value):
             cursor = conection.cursor()
             cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {value}")
             result = cursor.fetchone()
-            for r in result:
-                if r <= 0:
-                    print('\033[31mNão existe a lente em estoque\033[m')
-                    return False
-                elif r > 0:
-                    loop = True
-                    return True
+            if result[0] <= 0:
+                print('\033[31mNão existe a lente em estoque\033[m')
+                loop = True
+                return False
+            elif result[0] > 0:
+                loop = True
+                return True
         except:
             print('\033[31mErro ao contar lentes!\033[m')
 
 
+#  possívelmente será inutilzada...
 def read_zero_diopter(sphe, cyl, add, eye, mat, lab):
     lens = {'1': 'Lente Vis Simples 1.50 c/A.R.', '2': 'Lente Vis Simples 1.56 c/A.R.',
             '3': 'Lente V.S. 1.56 Filtro Azul c/A.R.', '4': 'Lente Ac. Progressiva 1.56 c/A.R.',
@@ -304,7 +326,7 @@ def read_zero_diopter(sphe, cyl, add, eye, mat, lab):
                     return True
         except:
             print('\033[31mErro ao contar lentes!\033[m')
-            break
+            break  # possível  #
 
 
 def read_eye(value):
@@ -323,3 +345,44 @@ def read_eye(value):
                 continue
     except:
         print('\033[31mERRO ao identificar lado da lente!\033[m')
+
+
+def read_reason(value):
+    read = read_whole(value)
+    dic = {'1': 'QUEBRA', '2': 'MONTAGEM', '3': 'GARANTIA'}
+    var = dic[f'{read}']
+    loop = False
+    while not loop:
+        try:
+            load = var
+            if load == 'QUEBRA' or load == 'MONTAGEM' or load == 'GARANTIA':
+                loop = True
+                return load
+            else:
+                print('\033[31mOpção Inválida!\033[m')
+                loop = True
+        except:
+            print('\033[31mErroa ao ler o motivo!\033[m')
+
+
+def read_store(value):
+    print('[1] > 2064\n[2] > 1432\n[3] > 2007\n[4] > 1518\n[5] > 1571\n[6] > 1744\n[7] > 1574\n[8] > 1648\n[9] > 2226')
+    store = {'1': '2064', '2': '1432', '3': '2007', '4': '1518', '5': '1571', '6': '1744', '7': '1574', '8': '1648',
+             '9': '2226'}
+    try:
+        loop = False
+        while not loop:
+            load = read_whole(value)
+            var = store[f'{load}']
+            if load > 9:
+                loop = True
+                print('\033[31mLoja não existe!\033[m')
+            elif load >= 1:
+                loop = True
+                print(f'Loja selecionada {var}.')
+                return int(var)
+            else:
+                loop = True
+                print('\033[31mLoja não existe!\033[m')
+    except:
+        print('\033[31mErro ao reconhecer lojas!\033[m')

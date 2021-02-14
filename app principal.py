@@ -1,6 +1,8 @@
 # controle de estoque de lentes
 
 from system.lens import *
+from datetime import date
+print(date.today())
 
 loop = False
 
@@ -95,7 +97,7 @@ try:
                     menu()
                     exit_stock('Selecione o laboratório: ', 'Selecione o material: ', 'Digite a dioptria esférica: ',
                                'Digite a dioptria cilindrica: ', 'Digite a adição: ', 'Digite o lado: ',
-                               'Digite a quantidade: ')
+                               'Digite a quantidade: ', 'Digite a filial: ', 'Motivo: ')
                     opt = read_whole('Continuar retirando 1 > S / 2 > N: ')
                     if opt == 1:
                         continue
