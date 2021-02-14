@@ -88,10 +88,12 @@ def exit_code(cod, loja, motivo):
         bar_code = read_whole(cod)
         if read_zero_cod(bar_code):
             store = read_store(loja)
+            print('\033[35m[1] para quebra.\n'
+                  '[2] para montagem.\n'
+                  '[3] para garantia.\033[m')
             reason = read_reason(motivo)
             conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
             cursor = conection.cursor()  # para buscar o material da lente
-            print(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
             cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
             lens = cursor.fetchone()
 
@@ -352,20 +354,24 @@ def read_reason(value):
 
 
 def read_store(value):
-    print('[1] > 2064\n[2] > 1432\n[3] > 2007\n[4] > 1518\n[5] > 1571\n[6] > 1744\n[7] > 1574\n[8] > 1648\n[9] > 2226')
+    print('[1] > 2064\n[2] > 1432\n[3] > 2007\n[4] > 1518\n[5] > 1571\n[6] > 1744\n[7] > 1574\n[8] > 1648\n[9] > 2226\n'
+          '[10] > Laboratório')
     store = {'1': '2064', '2': '1432', '3': '2007', '4': '1518', '5': '1571', '6': '1744', '7': '1574', '8': '1648',
-             '9': '2226'}
+             '9': '2226', '10': '0000'}
     try:
         loop = False
         while not loop:
             load = read_whole(value)
-            if load > 9:
+            if load > 10:
                 print('\033[31mLoja não existe!\033[m')
                 continue
             elif load >= 1:
                 loop = True
                 var = store[f'{load}']
-                print(f'\033[34mLoja selecionada {var}.\033[m')
+                if '0000' in var:
+                    print('\033[34mLaboratótio selecionado.\033[m')
+                else:
+                    print(f'\033[34mLoja selecionada {var}.\033[m')
                 return int(var)
             else:
                 print('\033[31mLoja não existe!\033[m')
