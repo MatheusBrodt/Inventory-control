@@ -81,17 +81,29 @@ def register_cod(cod, amount):
         print('\033[31mErro ao cadastrar a lente!\033[m')
 
 
-def exit_code(cod, amount):
+def exit_code(cod, loja, motivo):
     import mysql.connector
+    from datetime import date
     try:
         bar_code = read_whole(cod)
         if read_zero_cod(bar_code):
-            amount_1 = read_whole(amount)
+            store = read_store(loja)
+            reason = read_reason(motivo)
             conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
-            cursor = conection.cursor()
-            cursor.execute(f"UPDATE stock SET amount = amount-{amount_1} WHERE cod_barras = {bar_code}")
+            cursor = conection.cursor()  # para buscar o material da lente
+            print(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
+            cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
+            lens = cursor.fetchone()
+
+            cursor = conection.cursor()  # para retirar a lente do estoque
+            cursor.execute(f"UPDATE stock SET amount = amount-{1} WHERE cod_barras = {bar_code}")
             conection.commit()
             print('\033[34mLente retirada do estoque com sucesso!\033[m')
+
+            cursor = conection.cursor()  # para adicionar a lente na lista de saída
+            cursor.execute(f"INSERT INTO store VALUES ({bar_code}, '{lens[0]}', {store}, '{reason}', '{date.today()}')")
+            conection.commit()
+            print('\033[34mLente cadastrada na lista de saída!\033[m')
     except:
         print('\033[31mErro ao retirar a lente!\033[m')
 
@@ -194,7 +206,7 @@ def exit_stock(lab, material, sph_diopter, cyl_diopter, add, eye, amount, loja, 
             cursor.execute(f"INSERT INTO store "
                            f"(cod_barras, lens, store, reason, data) "
                            f"VALUES "
-                           f"({cod[0]}, '{laboratory[f'{lab_1}']}', {store}, '{reason}', '{date.today()}')")
+                           f"({cod[0]}, '{lens[f'{mat}']}', {store}, '{reason}', '{date.today()}')")
             print('\033[34mLente cadastrada na tabela de saída!\033[m')
             conection.commit()
     except:
@@ -300,35 +312,6 @@ def read_zero_cod(value):
             print('\033[31mErro ao contar lentes!\033[m')
 
 
-#  possívelmente será inutilzada...
-def read_zero_diopter(sphe, cyl, add, eye, mat, lab):
-    lens = {'1': 'Lente Vis Simples 1.50 c/A.R.', '2': 'Lente Vis Simples 1.56 c/A.R.',
-            '3': 'Lente V.S. 1.56 Filtro Azul c/A.R.', '4': 'Lente Ac. Progressiva 1.56 c/A.R.',
-            '5': 'Lente Vis Simp 1.59 Poly c/A.R.', '6': 'zeiss_platinum',
-            '7': 'zeiss_silver', '8': 'zeiss_photo', '9': 'zeiss_blue'}
-    laboratory = {'1': 'haytek', '2': 'zeiss'}
-    import mysql.connector
-    loop = False
-    while not loop:
-        try:
-            conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
-            cursor = conection.cursor()
-            cursor.execute(f"SELECT amount FROM stock WHERE spherical = {sphe} AND cylindrical = {cyl} "
-                           f"AND adicao = {add} AND eye = '{eye}' AND material = '{lens[f'{mat}']}' "
-                           f"AND laboratory = '{laboratory[f'{lab}']}'")
-            result = cursor.fetchone()
-            for r in result:
-                if r <= 0:
-                    print('\033[31mNão existe a lente em estoque\033[m')
-                    return False
-                elif r > 0:
-                    loop = True
-                    return True
-        except:
-            print('\033[31mErro ao contar lentes!\033[m')
-            break  # possível  #
-
-
 def read_eye(value):
     validate = str(input(value).upper())
     try:
@@ -348,21 +331,24 @@ def read_eye(value):
 
 
 def read_reason(value):
-    read = read_whole(value)
     dic = {'1': 'QUEBRA', '2': 'MONTAGEM', '3': 'GARANTIA'}
-    var = dic[f'{read}']
     loop = False
     while not loop:
         try:
-            load = var
-            if load == 'QUEBRA' or load == 'MONTAGEM' or load == 'GARANTIA':
-                loop = True
-                return load
+            read = read_whole(value)
+            if 0 < read <= 3:
+                var = dic[f'{read}']
+                load = var
+                if load == 'QUEBRA' or load == 'MONTAGEM' or load == 'GARANTIA':
+                    loop = True
+                    return load
+                else:
+                    print('\033[31mMotivo Inválido!\033[m')
+                    loop = True
             else:
-                print('\033[31mOpção Inválida!\033[m')
-                loop = True
+                print('\033[31mMotivo Inválido!\033[m')
         except:
-            print('\033[31mErroa ao ler o motivo!\033[m')
+            print('\033[31mErro ao ler o motivo!\033[m')
 
 
 def read_store(value):
@@ -373,16 +359,16 @@ def read_store(value):
         loop = False
         while not loop:
             load = read_whole(value)
-            var = store[f'{load}']
             if load > 9:
-                loop = True
                 print('\033[31mLoja não existe!\033[m')
+                continue
             elif load >= 1:
                 loop = True
-                print(f'Loja selecionada {var}.')
+                var = store[f'{load}']
+                print(f'\033[34mLoja selecionada {var}.\033[m')
                 return int(var)
             else:
-                loop = True
                 print('\033[31mLoja não existe!\033[m')
+                continue
     except:
         print('\033[31mErro ao reconhecer lojas!\033[m')

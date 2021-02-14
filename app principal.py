@@ -92,7 +92,7 @@ try:
                                          '[2] para retirar pela dioptria.\n'
                                          '[3] para voltar ao menu anterior. \nDigite: ')
                 if record_type == 1:
-                    exit_code('Digite o código de barras: ', 'Digite a quantidade: ')
+                    exit_code('Digite o código de barras: ', 'Digite a filal: ', 'Motivo: ')
                 elif record_type == 2:
                     menu()
                     exit_stock('Selecione o laboratório: ', 'Selecione o material: ', 'Digite a dioptria esférica: ',
