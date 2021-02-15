@@ -378,3 +378,79 @@ def read_store(value):
                 continue
     except:
         print('\033[31mErro ao reconhecer lojas!\033[m')
+
+
+def cont_reasons():
+    import mysql.connector
+    lista = (2064, 1432, 2007, 1518, 1571, 1744, 1574, 1648, 2226, 0000)
+    lista_reason = ('MONTAGEM', 'QUEBRA', 'GARANTIA')
+    for e in lista:
+        store = e
+        for x in lista_reason:
+            reason = x
+            conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
+            cursor = conection.cursor()
+            cursor.execute(f"SELECT COUNT(reason) FROM store "
+                           f"WHERE store = {store} AND reason = '{reason}' "
+                           f"GROUP BY reason")
+            result = cursor.fetchone()
+            if store == 0000:
+                if result is None:
+                    print(f'\033[32mLaboratório não tem {reason.title()}.\033[m')
+                else:
+                    if result[0] > 1:
+                        print(f'\033[32mLaboratório tem {result[0]} {reason.title()}s.\033[m')
+                    else:
+                        print(f'\033[32mLaboratório tem {result[0]} {reason.title()}.\033[m')
+            else:
+                if result is None:
+                    print(f'\033[32m{store} não tem {reason.title()}.\033[m')
+                else:
+                    if result[0] > 1:
+                        print(f'\033[32m{store} tem {result[0]} {reason.title()}s.\033[m')
+                    else:
+                        print(f'\033[32m{store} tem {result[0]} {reason.title()}.\033[m')
+            conection.close()
+        print('-' * 22)
+
+
+def detailed_consulation(store):
+    import mysql.connector
+    try:
+        store_1 = read_store(store)
+        print('\033[32mDigite o período:\033[m')
+        day = read_whole('Dia: ')
+        month = read_whole('Mês: ')
+        year = read_whole('Ano: ')
+        date = f"'{year}-{month}-{day}'"
+        print('\033[32mAté o dia: \033[m')
+        day_1 = read_whole('Dia: ')
+        month_1 = read_whole('Mês: ')
+        year_1 = read_whole('Ano: ')
+        date_1 = f"'{year_1}-{month_1}-{day_1}'"
+        conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
+        cursor = conection.cursor()
+        cursor.execute(f"SELECT a.store, a.lens, a.sequencia, b.spherical, b.cylindrical, b.adicao, b.eye, a.reason, "
+                       f"a.data "
+                       f"FROM store AS a INNER JOIN stock AS b "
+                       f"ON a.cod_barras = b.cod_barras "
+                       f"WHERE a.store = {store_1} AND data BETWEEN {date} AND {date_1}")
+        result = cursor.fetchall()
+        if not result:
+            print('\033[33mNão tem serviços cadastrados nesse perído!\033[m')
+        else:
+            for r in result:
+                loja = (r[0])
+                lab = (r[1])
+                seq = (r[2])
+                sphe = (r[3])
+                cyl = (r[4])
+                add = (r[5])
+                eye = (r[6])
+                mot = (r[7])
+                dat = (r[8])
+                print(f'Loja: {loja}, Lente: {lab}, Sequência: {seq}, Esférico: {sphe}, Cilindro: {cyl}, '
+                      f'Adição: {add}, Olho: {eye}, Motivo: {mot}, Data: {dat}')
+            conection.close()
+    except:
+        print('\033[31mErro ao análisar detalhadamente as lentes que foram usadas!\033[m')

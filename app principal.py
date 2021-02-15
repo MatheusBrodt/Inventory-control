@@ -2,18 +2,19 @@
 
 from system.lens import *
 from datetime import date
-print(date.today())
+date = (date.today())
+print(date)
 
 loop = False
 
 try:
     while not loop:
-        print("""    [1] para cadastrar lente.
+        print("""    \033[35m[1] para cadastrar lente.
     [2] para visualizar estoque.
     [3] para exibir as lentes que não tem em estoque.
     [4] para retirar uma lente.
     [5] para ver regitro de saída e de quebras.
-    [6] para sair.""")
+    [6] para sair.\033[m""")
         option = read_whole('Digite uma opção: ')
         if option == 1:  # para registrar uma lente
             record_type = read_whole('[1] para adicionar pelo código de barras.\n'
@@ -112,7 +113,17 @@ try:
                 else:
                     print('\033[33mOpção Inváida!\033[m')
         elif option == 5:  # para ver o registro de saída de lentes e quebras
-            print('Escrever código!')
+            while True:
+                print('[1] para pesquisa rápida.\n[2] para pesquisa detalhada.\n[3] pra volta ao menu anterior.')
+                opt = read_whole('Digite: ')
+                if opt == 1:
+                    cont_reasons()
+                elif opt == 2:
+                    detailed_consulation('Digite a loja: ')
+                elif opt == 3:
+                    break
+                else:
+                    print('\033[33mOpção Inválida!\033[m')
         elif option == 6:  # para sair
             print('\033[33mFinalizando o sistema!\033[m')
             break
