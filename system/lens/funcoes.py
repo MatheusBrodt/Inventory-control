@@ -11,7 +11,7 @@ def read_whole(txt):
                     loop = True
                     return int(validate)
         except (ValueError, TypeError):
-            print('\033[33mErro ao identificar o valor digitado na opção.\033[m')
+            print('\033[31mEntrada Inválida\033[m')
             continue
         else:
             break
@@ -54,40 +54,111 @@ def search(lab, material, sph_diopter, cyl_diopter, add, eye):
         return False
 
 
+#  dar atenção ainda nessa função, finalizado
 def register_cod_one(cod):
     import mysql.connector
     try:
-        bar_code = cod
+
+        codigos = []
+        bar_code = read_whole(cod)
         conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
-        cursor = conection.cursor()
-        cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {bar_code}")
-        conection.commit()
-        print('\033[34mLente cadastrada com sucesso!\033[m')
+
+        cursor = conection.cursor()  # para examinar o código de barras
+        cursor.execute(f"SELECT cod_barras FROM stock ")
+        result = cursor.fetchall()
+        for d in result:
+            e = d
+            for c in e:
+                codigos.append(c)
+
+        if bar_code in codigos:
+            cursor = conection.cursor()  # para cadastrar a lente
+            cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {bar_code}")
+            conection.commit()
+
+            cursor = conection.cursor()  # para exibir qula lente foi cadastrada
+            cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
+            lens = cursor.fetchone()
+            conection.close()
+            print(f'\033[34m{lens[0]} cadastrada com sucesso!\033[m')
+        else:
+            sound()
+            print('\033[31mCódigo não existe!\033[m')
+            while True:
+                print('\033[32mCadastrar código de barras?\033[m')
+                print('\033[35m[1] para SIM\n[2] para NÃO\033[m')
+                opt = read_whole('Digite: ')
+                if opt == 1:
+                    menu()  # para cadastrar se o código não existir
+                    register_diopter('Digite o código de barras: ', 'Selecione o laboratório: ',
+                                     'Selecione o material: ', 'Dioptria esférica: ', 'Dioptria cilindrica: ',
+                                     'Digite a adição: ', 'Digite o lado: ', 'Digite a quantidade: ')
+                    break
+                elif opt == 2:
+                    break
+                else:
+                    print('\033[33mOpção Inválida!\033[m')
     except:
         print('\033[31mErro ao cadastrar a lente!\033[m')
 
 
+#  editar esssa função, finalizado
 def register_cod(cod, amount):
     import mysql.connector
     try:
-        bar_code = cod
-        amount_1 = amount
+
+        codigos = []
+        bar_code = read_whole(cod)
+        amount_1 = read_whole(amount)
         conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
-        cursor = conection.cursor()
-        cursor.execute(f"UPDATE stock SET amount = amount+{amount_1} WHERE cod_barras = {bar_code}")
-        conection.commit()
-        print('\033[34mLente cadastrada com sucesso!\033[m')
+
+        cursor = conection.cursor()  # para examinar o código de barras
+        cursor.execute(f"SELECT cod_barras FROM stock ")
+        result = cursor.fetchall()
+        for d in result:
+            e = d
+            for c in e:
+                codigos.append(c)
+
+        if bar_code in codigos:
+            cursor = conection.cursor()  # para cadastrar a lente
+            cursor.execute(f"UPDATE stock SET amount = amount+{amount_1} WHERE cod_barras = {bar_code}")
+            conection.commit()
+
+            cursor = conection.cursor()  # para exibir qula lente foi cadastrada
+            cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
+            lens = cursor.fetchone()
+            conection.close()
+            print(f'\033[34m{lens[0]} cadastrada com sucesso!\033[m')
+        else:
+            sound()
+            print('\033[31mCódigo não existe!\033[m')
+            while True:
+                print('\033[32mCadastrar código de barras?\033[m')
+                print('\033[35m[1] para SIM\n[2] para NÃO\033[m')
+                opt = read_whole('Digite: ')
+                if opt == 1:
+                    menu()  # para cadastrar se o código não existir
+                    register_diopter('Digite o código de barras: ', 'Selecione o laboratório: ',
+                                     'Selecione o material: ', 'Dioptria esférica: ', 'Dioptria cilindrica: ',
+                                     'Digite a adição: ', 'Digite o lado: ', 'Digite a quantidade: ')
+                    break
+                elif opt == 2:
+                    break
+                else:
+                    print('\033[33mOpção Inválida!\033[m')
     except:
         print('\033[31mErro ao cadastrar a lente!\033[m')
 
 
-def exit_code(cod, loja, motivo):
+def exit_code(cod, loja, sequencia, motivo):
     import mysql.connector
     from datetime import date
     try:
         bar_code = read_whole(cod)
         if read_zero_cod(bar_code):
             store = read_store(loja)
+            seq = read_whole(sequencia)
             print('\033[35m[1] para quebra.\n'
                   '[2] para montagem.\n'
                   '[3] para garantia.\033[m')
@@ -96,6 +167,7 @@ def exit_code(cod, loja, motivo):
             cursor = conection.cursor()  # para buscar o material da lente
             cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
             lens = cursor.fetchone()
+            print(f"INSERT INTO store VALUES ({bar_code}, '{lens[0]}', {store}, {seq}, '{reason}', '{date.today()}')")
 
             cursor = conection.cursor()  # para retirar a lente do estoque
             cursor.execute(f"UPDATE stock SET amount = amount-{1} WHERE cod_barras = {bar_code}")
@@ -103,7 +175,8 @@ def exit_code(cod, loja, motivo):
             print('\033[34mLente retirada do estoque com sucesso!\033[m')
 
             cursor = conection.cursor()  # para adicionar a lente na lista de saída
-            cursor.execute(f"INSERT INTO store VALUES ({bar_code}, '{lens[0]}', {store}, '{reason}', '{date.today()}')")
+            cursor.execute(f"INSERT INTO store VALUES ({bar_code}, '{lens[0]}', {store}, {seq}, "
+                           f"'{reason}', '{date.today()}')")
             conection.commit()
             print('\033[34mLente cadastrada na lista de saída!\033[m')
     except:
@@ -111,8 +184,10 @@ def exit_code(cod, loja, motivo):
 
 
 def menu():
-    lens = {'1': '1.56_ar', '2': '1.56_blue', '3': 'poly_ar', '4': '1.67', '5': 'zeiss_blue', '6': 'zeiss_platinum',
-            '7': 'zeiss_silver', '8': 'zeiss_photo'}
+    lens = {'1': 'Lente Vis Simples 1.50 c/A.R.', '2': 'Lente Vis Simples 1.56 c/A.R.',
+            '3': 'Lente V.S. 1.56 Filtro Azul c/A.R.', '4': 'Lente Ac. Progressiva 1.56 c/A.R.',
+            '5': 'Lente Vis Simp 1.59 Poly c/A.R.', '6': 'zeiss_platinum',
+            '7': 'zeiss_silver', '8': 'zeiss_photo', '9': 'zeiss_blue'}
     laboratory = {'1': 'haytek', '2': 'zeiss'}
     print(f'\033[33mLaboratórios\033[m\n'
           f'1 > {laboratory["1"].capitalize()}\n'
@@ -128,7 +203,7 @@ def menu():
           f'8 > {lens["8"].capitalize()}\n')
 
 
-def zero(lab, material):
+def zero(lab, material, sph, cyl):
     """
     Lens search function does not exist in the database.
     :param lab: Laboratory.
@@ -143,25 +218,34 @@ def zero(lab, material):
     laboratory = {'1': 'haytek', '2': 'zeiss'}
     lab_1 = read_whole(lab)
     material_1 = read_material(material)
+    esf = read_diopter(sph)
+    if esf < 0:
+        sinal = '-'
+    else:  # ATENÇÃO...............
+        sinal = '+'
+
+    cil = read_diopter(cyl)
     try:
         conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
         cursor = conection.cursor()
-        cursor.execute(f"SELECT spherical, cylindrical, adicao, eye FROM stock "
+        cursor.execute(f"SELECT spherical, cylindrical, adicao, eye, material FROM stock "
                        f"WHERE material = '{lens[f'{material_1}']}' AND laboratory = '{laboratory[f'{lab_1}']}'"
-                       f" AND amount = '0' OR amount < '0'")
+                       f" AND amount = '0' OR amount < '0' ORDER BY spherical")
         result = cursor.fetchall()
         print(f'\033[34mLentes {lens[f"{material_1}"]} zeradas:\033[m')
         for r in result:
-            sphe = (r[0])
-            cyl = (r[0+1])
-            add = (r[0+2])
-            eye = (r[0+3])
+            if esf  # parei de pensar aqui....................
+                sphe = (r[0])
+            cyl = (r[1])
+            add = (r[2])
+            eye = (r[3])
+            mat = (r[4])
             if add is None:
                 add = 0
             if eye == '':
                 eye = 'VS'
             print(f'|ESFÉRICO: \033[31m{sphe:.2f}\033[m| CILINDRO: \033[31m{cyl:.2f}\033[m| '
-                  f'ADIÇÃO: \033[31m{add:.2f}\033[m| OLHO: \033[31m{eye}\033[m')
+                  f'ADIÇÃO: \033[31m{add:.2f}\033[m| OLHO: \033[31m{eye}\033[m| MATERIAL: \033[31m{mat}\033[m|')
         cursor.close()
     except:
         print(f'\033[31mErro ao pesquisar grade zerada no estoque!\033[m')
@@ -268,7 +352,7 @@ def read_diopter(txt):
             break
 
 
-def register_diopter(lab, material, sphe_diopter, cyl_diopter, add, eye, amount):
+def register_diopter(codigo, lab, material, sphe_diopter, cyl_diopter, add, eye, amount):
     import mysql.connector
     lens = {'1': 'Lente Vis Simples 1.50 c/A.R.', '2': 'Lente Vis Simples 1.56 c/A.R.',
             '3': 'Lente V.S. 1.56 Filtro Azul c/A.R.', '4': 'Lente Ac. Progressiva 1.56 c/A.R.',
@@ -276,6 +360,7 @@ def register_diopter(lab, material, sphe_diopter, cyl_diopter, add, eye, amount)
             '7': 'zeiss_silver', '8': 'zeiss_photo', '9':'zeiss_blue'}
     laboratory = {'1': 'haytek', '2': 'zeiss'}
     try:
+        cod = read_whole(codigo)
         lab_1 = read_lab(lab)
         material_1 = read_material(material)
         spherical = read_diopter(sphe_diopter)
@@ -284,10 +369,10 @@ def register_diopter(lab, material, sphe_diopter, cyl_diopter, add, eye, amount)
         opt_eye = read_eye(eye)
         amount_1 = read_whole(amount)
         conection = mysql.connector.connect(host='localhost', user='root', password='', database='lab_carol')
-        cursor = conection.cursor()
-        cursor.execute(f"UPDATE stock SET amount = amount+{amount_1} WHERE laboratory = '{laboratory[f'{lab_1}']}' "
-                       f"AND spherical = {spherical} AND cylindrical = {cylinder} AND "
-                       f"material = '{lens[f'{material_1}']}' AND eye = '{opt_eye}' AND adicao = {adicao}")
+        cursor = conection.cursor()  # verificar essa parte
+        cursor.execute(f"INSERT INTO stock VALUES "
+                       f"('{cod}' , '{spherical}', '{cylinder}', '{adicao}', '{opt_eye}', '{lens[f'{material_1}']}', "
+                       f"'{laboratory[f'{lab_1}']}', '{amount_1}')")
         conection.commit()
         print('\033[33mLente cadastrada com sucesso!\033[m')
     except:
@@ -454,3 +539,10 @@ def detailed_consulation(store):
             conection.close()
     except:
         print('\033[31mErro ao análisar detalhadamente as lentes que foram usadas!\033[m')
+
+
+def sound():
+    #  reproduz três bips em sequência
+    import winsound
+    for c in range(3):
+        b = winsound.Beep(332, 200)
