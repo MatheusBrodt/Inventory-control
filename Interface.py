@@ -1,5 +1,6 @@
 from tkinter import *
 import mysql.connector
+print('\033[31mRODANDO O PROGRAMA!\033[m')
 
 root = Tk()
 
@@ -13,7 +14,94 @@ class Funcs():
         except:
             print('\033[31mErro ao conectar no BD!\033[m')
 
+    def clear(self):
+        self.codigo_Capt = self.codBarrasEntry.delete(0, END)
+        self.sphe_Capt = self.sphe_Entry.delete(0, END)
+        self.cylin_Capt = self.cylin_Entry.delete(0, END)
+        self.add_Capt = self.add_Entry.delete(0, END)
+        self.eye_Capt = self.eye_Entry.delete(0, END)
 
+    def captura_dados(self):
+        self.codigo_Capt = self.codBarrasEntry.get()
+        self.sphe_Capt = self.sphe_Entry.get()
+        self.cylin_Capt = self.cylin_Entry.get()
+        self.add_Capt = self.add_Entry.get()
+        self.eye_Capt = self.eye_Entry.get()
+
+    def verification_Int(self):  #>>> VERIFICAR ESTA FUNÇÃO
+        self.captura_dados()
+        try:
+            validate = str(self.codigo_Capt)
+            if validate.isalpha() or validate.isspace():
+                self.text_warning = 'DADOS INVÁLIDOS'
+                self.sound()
+                self.clear()
+                print('\033[31mEntrada Inválida do if\033[m')
+                return False
+            else:
+                return True
+                self.text_warning = ''
+                print('Dados aceitos!')
+        except (ValueError, TypeError):
+            print('\033[31mEntrada Inválida do try\033[m')
+
+    def register_cod(self):  #>>> VERICAR
+        if self.verification_Int():
+            self.warning()
+            self.connect_BD()
+            self.captura_dados()
+            codigos = []
+
+            self.cursor = self.conn.cursor()
+            self.cursor.execute(f"SELECT cod_barras FROM stock ")
+            result = self.cursor.fetchall()
+            for d in result:
+                e = d
+                for c in e:
+                    codigos.append(c)
+            if int(self.codigo_Capt) in codigos:
+                #cursor = conection.cursor()  # para cadastrar a lente
+                #cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {bar_code}")
+                #conection.commit()
+
+                #cursor = conection.cursor()  # para exibir qula lente foi cadastrada
+                #cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
+                #lens = cursor.fetchone()
+                #conection.close()
+                print(f'\033[34m cadastrada com sucesso!\033[m')
+            else:
+                self.sound()
+                print('\033[31mCódigo não existe!\033[m')
+                #while True:
+                  #  print('\033[32mCadastrar código de barras?\033[m')
+                   # print('\033[35m[1] para SIM\n[2] para NÃO\033[m')
+                    #opt = read_whole('Digite: ')
+                    #if opt == 1:
+                    #    menu()  # para cadastrar se o código não existir
+                    #    register_diopter('Digite o código de barras: ', 'Selecione o laboratório: ',
+                     #                    'Selecione o material: ', 'Dioptria esférica: ', 'Dioptria cilindrica: ',
+                      #                   'Digite a adição: ', 'Digite o lado: ', 'Digite a quantidade: ')
+                       # break
+                    #elif opt == 2:
+                     #   break
+                    #else:
+                    #    print('\033[33mOpção Inválida!\033[m')
+
+    def warning(self):
+        self.font_warning = ('Verdana', 20, 'italic', 'bold')
+        self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
+                                        bg='#f0e68c', fg='red')
+
+        self.text_warning_Label.place(relx=0.05, rely=0.60, relwidth=0.90, relheight=0.16)
+
+    def sound(self):
+        #  REPRODUZ TRÊS BIPS EM SEGUIDA
+        import winsound
+        for c in range(3):
+            b = winsound.Beep(332, 200)
+            self.warning()
+
+    ### ENTRADA DE DADOS ###
 ### FRONT END ###
 class Interface(Funcs):
     def __init__(self):
@@ -32,7 +120,6 @@ class Interface(Funcs):
         self.button_Sair()
         self.entry_Login()
         self.entry_Senha()
-        self.connect_BD()
         root.mainloop()
 
     # FRAMES
@@ -68,11 +155,37 @@ class Interface(Funcs):
                                    highlightthickness=2)
         self.frame_options.place(relx=0.14, rely=0.21, relwidth=0.43, relheight=0.30)
 
+
     ### BOTÕES ###
 
+    # OPÇÕES DO BOTÃO ENTER   ###>>>> ARRUMAR AQUI <<<<### O COMANDO DO MYSQL
+    def option_Ir(self):
+        self.captura_dados()
+        self.register_cod()
+        self.connect_BD()
+        self.cursor = self.conn.cursor()
+        self.cursor.execute(f"""INSERT INTO stock VALUES
+                            ('{self.codigo_Capt}', '1.50 c/AR', '{self.sphe_Capt}', '{self.cylin_Capt}',
+                            '{self.add_Capt}', '{self.eye_Capt}', 'Haytek', '1')
+                            """)
+        self.conn.commit()
+        self.clear()
+        print('Opção do botão IR concluída!')
+
+    #  BOTÃO ENTER DE CADASTRO DE LENTES
+    def button_Ir(self):
+        print('Carregando')
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.Ir = Button(self.frame_options, text='Ir', font=self.fontepadrao, bg='#f0e68c', command=self.option_Ir)
+
+        self.Ir.place(relx=0.425, rely=0.80, relwidth=0.15, relheight=0.15)
+
+    ######
     #  OPÇOES DE CADASTRO DE LENTES
     def option_RegisterLens(self):
+        print("Botão de cadastro clicado!")
         self.options()
+        self.button_Ir()
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         #  LABELS
         self.codBarras = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
@@ -99,13 +212,15 @@ class Interface(Funcs):
         self.add_Entry.place(relx=0.28, rely=0.27, relwidth=0.08, relheight=0.11)
         self.eye_Entry.place(relx=0.72, rely=0.27, relwidth=0.08, relheight=0.11)
 
-    #  BOTÃO
+    #  BOTÃO CADASTRAR
     def button_Cadastrar(self):
         self.CadastrarLente = Button(self.frame_buttons, text="Cadastrar", command=self.option_RegisterLens,
                                      bd=2, bg="#c0c0c0", fg="black")
         self.CadastrarLente["font"] = ("Verdana", 10, "italic", "bold")
         self.CadastrarLente.place(relx=0.05, rely=0.02, relwidth=0.90, relheight=0.05)
+    ######
 
+    ######
     #  OPÇÕES DE VISUALIZAÇÃO DO ESTOQUE
     def exibirOpcoes(self):
         self.options()
@@ -113,24 +228,28 @@ class Interface(Funcs):
         self.label2 = Label(self.frame_options, text="TESTANDO", bg="#f0e68c", font=self.fontepadrao)
         self.label2.place(relx=0.04, rely=0.05, relwidth=0.44, relheight=0.15)
 
-    #  BOTÃO
+    #  BOTÃO VISUALIZAR
     def button_VisEstoque(self):
         self.VisEstoque = Button(self.frame_buttons, text="Vis. Estoque", bd=2, bg="#c0c0c0", fg="black",
                                  command=self.exibirOpcoes)
         self.VisEstoque["font"] = ("Verdana", 10, "italic", "bold")
         self.VisEstoque.place(relx=0.05, rely=0.08, relwidth=0.90, relheight=0.05)
+    ######
 
+    ######
     #  OPÇÕES DE LENTES ZERADAS NO ESTOQUE
     def zero_lens(self):
         self.options()
 
-    # BOTÃO
+    # BOTÃO LENTES ZERADAS
     def button_LensZero(self):
         self.LensZero = Button(self.frame_buttons, text="Lentes\nem\nFalta", bd=2, bg="#c0c0c0", fg="black",
                                command=self.zero_lens)
         self.LensZero["font"] = ("Verdana", 10, "italic", "bold")
         self.LensZero.place(relx=0.05, rely=0.14, relwidth=0.90, relheight=0.10)
+    #######
 
+    #######
     #  OPÇÕES DE RETIRAR LENTES
     def lens_output(self):
         self.options()
@@ -140,13 +259,15 @@ class Interface(Funcs):
         self.codBarrasEntry.place(relx=0.43, rely=0.08, relwidth=0.40, relheight=0.13)
         self.codBarras.place(relx=0.11, rely=0.08, relwidth=0.30, relheight=0.15)
 
-    #  BOTÃO
+    #  BOTÃO RETIRAR
     def button_Retirar(self):
         self.Retirar = Button(self.frame_buttons, text="Retirar", bd=2, bg="#c0c0c0", fg="black",
                               command=self.lens_output)
         self.Retirar["font"] = ("Verdana", 10, "italic", "bold")
         self.Retirar.place(relx=0.05, rely=0.25, relwidth=0.90, relheight=0.05)
+    ######
 
+    ######
     #  OPÇÕES DE REGISTRAR SAÍDAS DE LENTES
     def reg_output(self):
         self.options()
@@ -157,6 +278,7 @@ class Interface(Funcs):
                                command=self.reg_output)
         self.RegSaida["font"] = ("Verdana", 10, "italic", "bold")
         self.RegSaida.place(relx=0.05, rely=0.31, relwidth=0.90, relheight=0.10)
+    ######
 
     #  BOTÃO DE SAIR
     def button_Sair(self):
@@ -164,6 +286,8 @@ class Interface(Funcs):
         self.Sair["font"] = ("Verdana", 10, "italic", "bold")
         self.Sair["command"] = quit
         self.Sair.place(relx=0.05, rely=0.93, relwidth=0.90, relheight=0.05)
+
+
 
     # ENTRADA DE DADOS NA LABEL DO TITULO E INFORMAÇÕES
     def entry_Login(self):
