@@ -10,6 +10,7 @@ class Funcs():
     def connect_BD(self):
         try:
             self.conn = mysql.connector.connect(host='localhost', user='root', password='', database="lab_carol")
+            self.cursor = self.conn.cursor()
             print('Conectado no BD')
         except:
             print('\033[31mErro ao conectar no BD!\033[m')
@@ -20,6 +21,8 @@ class Funcs():
         self.cylin_Capt = self.cylin_Entry.delete(0, END)
         self.add_Capt = self.add_Entry.delete(0, END)
         self.eye_Capt = self.eye_Entry.delete(0, END)
+        self.lab = self.lab_Entry.delete(0, END)
+        self.mat_Capt = self.mat_Entry.delete(0, END)
 
     def captura_dados(self):
         self.codigo_Capt = self.codBarrasEntry.get()
@@ -27,6 +30,8 @@ class Funcs():
         self.cylin_Capt = self.cylin_Entry.get()
         self.add_Capt = self.add_Entry.get()
         self.eye_Capt = self.eye_Entry.get()
+        self.lab_Capt = self.lab_Entry.get()
+        self.mat_Capt = self.mat_Entry.get()
 
     def verification_Int(self):  #>>> VERIFICAR ESTA FUNÇÃO
         self.captura_dados()
@@ -45,10 +50,42 @@ class Funcs():
         except (ValueError, TypeError):
             print('\033[31mEntrada Inválida do try\033[m')
 
-    def register_cod(self):  #>>> VERICAR
+    def verification_Code(self):
+        self.captura_dados()
+        self.connect_BD()
+        self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codigo_Capt}")
+        result = self.cursor.fetchone()
+        if result is None:
+            result = 0
+        else:
+            if result[0] > int(0):
+                print('\033[31mChamando a função "Register_Cod"!\033[m')
+                self.register_cod()
+            else:
+                self.text_warning = 'CADASTRAR LENTE'
+
+    def insert_Dados(self, event):
+        self.connect_BD()
+        self.cursor.execute(f"SELECT material, spherical, cylindrical, adicao, eye, laboratory FROM stock")
+        result = self.cursor.fetchall()
+        for i in result:
+            mat = (i[0])
+            sphe = (i[1])
+            cyl = (i[2])
+            add = (i[3])
+            eye = (i[4])
+            lab = (i[5])
+
+        self.mat_Entry.insert(END, mat)
+        self.sphe_Entry.insert(END, sphe)
+        self.cylin_Entry.insert(END, cyl)
+        self.add_Entry.insert(END, add)
+        self.eye_Entry.insert(END, eye)
+        self.lab_Entry.insert(END, lab)
+
+    # ESTA FUNÇÃO CASO JA TENHA O CÓDIGO DE BARRAS CADASTRADO
+    def register_cod(self):
         if self.verification_Int():
-            self.warning()
-            self.connect_BD()
             self.captura_dados()
             codigos = []
 
@@ -60,32 +97,25 @@ class Funcs():
                 for c in e:
                     codigos.append(c)
             if int(self.codigo_Capt) in codigos:
-                #cursor = conection.cursor()  # para cadastrar a lente
-                #cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {bar_code}")
-                #conection.commit()
-
-                #cursor = conection.cursor()  # para exibir qula lente foi cadastrada
-                #cursor.execute(f"SELECT material FROM stock WHERE cod_barras = {bar_code}")
-                #lens = cursor.fetchone()
-                #conection.close()
-                print(f'\033[34m cadastrada com sucesso!\033[m')
+                self.insert_Dados(event='')
+                self.cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {self.codigo_Capt}")
+                self.conn.commit()
+                self.conn.close()
+                self.text_warning = 'LENTE ADICIONADA'
+                self.warning()
+                print(f'\033[34mLente adicionada com sucesso!\033[m'.title())
             else:
+                print('Não existe esta lente na base de dados!'.title()) #>>> CRIAR FUNÇÃO PARA CADASTRAR A LENTE
+                self.text_warning = 'CADASTRAR LENTE'
                 self.sound()
-                print('\033[31mCódigo não existe!\033[m')
-                #while True:
-                  #  print('\033[32mCadastrar código de barras?\033[m')
-                   # print('\033[35m[1] para SIM\n[2] para NÃO\033[m')
-                    #opt = read_whole('Digite: ')
-                    #if opt == 1:
-                    #    menu()  # para cadastrar se o código não existir
-                    #    register_diopter('Digite o código de barras: ', 'Selecione o laboratório: ',
-                     #                    'Selecione o material: ', 'Dioptria esférica: ', 'Dioptria cilindrica: ',
-                      #                   'Digite a adição: ', 'Digite o lado: ', 'Digite a quantidade: ')
-                       # break
-                    #elif opt == 2:
-                     #   break
-                    #else:
-                    #    print('\033[33mOpção Inválida!\033[m')
+                self.clear()
+                self.connect_BD()
+                self.captura_dados()
+                self.cursor.execute(f"INSERT INTO stock VALUES "
+                                    f"('{self.codigo_Capt}', '{self.mat_Capt}', '{self.sphe_Capt}', "
+                                    f"'{self.cylin_Capt}', '{self.add_Capt}', '{self.eye_Capt}', "
+                                    f"'{self.lab_Capt}', '1' )")
+                print('\033[31mCadastrada lente ixesistete!\033[m'.title())
 
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
@@ -100,6 +130,44 @@ class Funcs():
         for c in range(3):
             b = winsound.Beep(332, 200)
             self.warning()
+
+    def label_and_entry(self):
+        self.options()
+        self.button_Ir()
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        #  LABELS
+        self.codBarras = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
+        self.sphe_degree = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
+        self.cylin_degree = Label(self.frame_options, text='Cilindrico:', font=self.fontepadrao, bg='#f0e68c')
+        self.add = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
+        self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
+        self.lab = Label(self.frame_options, text='Laboratório:', font=self.fontepadrao, bg='#f0e68c')
+        self.mat = Label(self.frame_options, text='Material:', font=self.fontepadrao, bg='#f0e68c')
+        #  ESTRADA DE DADOS
+        self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.sphe_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.cylin_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.add_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.eye_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.lab_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.mat_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        #  LOCALIZAÇÃO DAS LABELS
+        self.codBarras.place(relx=0.010, rely=0.08, relwidth=0.20, relheight=0.15)
+        self.sphe_degree.place(relx=0.44, rely=0.08, relwidth=0.17, relheight=0.15)
+        self.cylin_degree.place(relx=0.72, rely=0.08, relwidth=0.14, relheight=0.15)
+        self.add.place(relx=0.19, rely=0.48, relwidth=0.10, relheight=0.15)
+        self.eye.place(relx=0.625, rely=0.48, relwidth=0.15, relheight=0.15)
+        self.lab.place(relx=0.01, rely=0.275, relwidth=0.20, relheight=0.15)
+        self.mat.place(relx=0.50, rely=0.275, relwidth=0.20, relheight=0.15)
+        #  LOCALIZAÇÃO DAS ENTRY
+        self.codBarrasEntry.place(relx=0.22, rely=0.10, relwidth=0.23, relheight=0.11)
+        self.sphe_Entry.place(relx=0.59, rely=0.10, relwidth=0.12, relheight=0.11)
+        self.cylin_Entry.place(relx=0.86, rely=0.10, relwidth=0.12, relheight=0.11)
+        self.add_Entry.place(relx=0.30, rely=0.50, relwidth=0.08, relheight=0.11)
+        self.eye_Entry.place(relx=0.75, rely=0.50, relwidth=0.08, relheight=0.11)
+        self.lab_Entry.place(relx=0.20, rely=0.295, relwidth=0.30, relheight=0.11)
+        self.mat_Entry.place(relx=0.665, rely=0.295, relwidth=0.30, relheight=0.11)
+
 
     ### ENTRADA DE DADOS ###
 ### FRONT END ###
@@ -120,6 +188,7 @@ class Interface(Funcs):
         self.button_Sair()
         self.entry_Login()
         self.entry_Senha()
+        self.logo()
         root.mainloop()
 
     # FRAMES
@@ -158,75 +227,41 @@ class Interface(Funcs):
 
     ### BOTÕES ###
 
+    #>>>>>
     # OPÇÕES DO BOTÃO ENTER   ###>>>> ARRUMAR AQUI <<<<### O COMANDO DO MYSQL
     def option_Ir(self):
+        print("Botão 'ir' clicado!".title())
+        self.verification_Code()
         self.captura_dados()
-        self.register_cod()
-        self.connect_BD()
-        self.cursor = self.conn.cursor()
-        self.cursor.execute(f"""INSERT INTO stock VALUES
-                            ('{self.codigo_Capt}', '1.50 c/AR', '{self.sphe_Capt}', '{self.cylin_Capt}',
-                            '{self.add_Capt}', '{self.eye_Capt}', 'Haytek', '1')
-                            """)
-        self.conn.commit()
         self.clear()
         print('Opção do botão IR concluída!')
 
     #  BOTÃO ENTER DE CADASTRO DE LENTES
     def button_Ir(self):
-        print('Carregando')
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.Ir = Button(self.frame_options, text='Ir', font=self.fontepadrao, bg='#f0e68c', command=self.option_Ir)
 
         self.Ir.place(relx=0.425, rely=0.80, relwidth=0.15, relheight=0.15)
+    #<<<<<
 
-    ######
+    #>>>>>
     #  OPÇOES DE CADASTRO DE LENTES
     def option_RegisterLens(self):
-        print("Botão de cadastro clicado!")
-        self.options()
-        self.button_Ir()
-        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
-        #  LABELS
-        self.codBarras = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
-        self.sphe_degree = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
-        self.cylin_degree = Label(self.frame_options, text='Cilindrico:', font=self.fontepadrao, bg='#f0e68c')
-        self.add = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
-        self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
-        #  ESTRADA DE DADOS
-        self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.sphe_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.cylin_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.add_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.eye_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        #  LOCALIZAÇÃO DAS LABELS
-        self.codBarras.place(relx=0.010, rely=0.08, relwidth=0.20, relheight=0.15)
-        self.sphe_degree.place(relx=0.44, rely=0.08, relwidth=0.17, relheight=0.15)
-        self.cylin_degree.place(relx=0.72, rely=0.08, relwidth=0.14, relheight=0.15)
-        self.add.place(relx=0.15, rely=0.25, relwidth=0.15, relheight=0.15)
-        self.eye.place(relx=0.60, rely=0.25, relwidth=0.15, relheight=0.15)
-        #  LOCALIZAÇÃO DAS ENTRY
-        self.codBarrasEntry.place(relx=0.22, rely=0.10, relwidth=0.23, relheight=0.11)
-        self.sphe_Entry.place(relx=0.59, rely=0.10, relwidth=0.12, relheight=0.11)
-        self.cylin_Entry.place(relx=0.86, rely=0.10, relwidth=0.12, relheight=0.11)
-        self.add_Entry.place(relx=0.28, rely=0.27, relwidth=0.08, relheight=0.11)
-        self.eye_Entry.place(relx=0.72, rely=0.27, relwidth=0.08, relheight=0.11)
-
+        print("Botão de cadastro clicado!".title())
+        self.label_and_entry()
     #  BOTÃO CADASTRAR
     def button_Cadastrar(self):
         self.CadastrarLente = Button(self.frame_buttons, text="Cadastrar", command=self.option_RegisterLens,
                                      bd=2, bg="#c0c0c0", fg="black")
         self.CadastrarLente["font"] = ("Verdana", 10, "italic", "bold")
         self.CadastrarLente.place(relx=0.05, rely=0.02, relwidth=0.90, relheight=0.05)
-    ######
+    #<<<<<
 
-    ######
+    #>>>>>
     #  OPÇÕES DE VISUALIZAÇÃO DO ESTOQUE
     def exibirOpcoes(self):
-        self.options()
-        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
-        self.label2 = Label(self.frame_options, text="TESTANDO", bg="#f0e68c", font=self.fontepadrao)
-        self.label2.place(relx=0.04, rely=0.05, relwidth=0.44, relheight=0.15)
+        print("Botão visualizar estoque clicado!".title())
+        self.label_and_entry()
 
     #  BOTÃO VISUALIZAR
     def button_VisEstoque(self):
@@ -234,11 +269,12 @@ class Interface(Funcs):
                                  command=self.exibirOpcoes)
         self.VisEstoque["font"] = ("Verdana", 10, "italic", "bold")
         self.VisEstoque.place(relx=0.05, rely=0.08, relwidth=0.90, relheight=0.05)
-    ######
+    #<<<<<
 
-    ######
+    #>>>>>
     #  OPÇÕES DE LENTES ZERADAS NO ESTOQUE
     def zero_lens(self):
+        print("Botão lentes em falta clicado!".title())
         self.options()
 
     # BOTÃO LENTES ZERADAS
@@ -247,11 +283,12 @@ class Interface(Funcs):
                                command=self.zero_lens)
         self.LensZero["font"] = ("Verdana", 10, "italic", "bold")
         self.LensZero.place(relx=0.05, rely=0.14, relwidth=0.90, relheight=0.10)
-    #######
+    #<<<<<
 
-    #######
+    #>>>>>
     #  OPÇÕES DE RETIRAR LENTES
     def lens_output(self):
+        print("Botão retirar lente clicado!".title())
         self.options()
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.codBarras = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
@@ -265,11 +302,12 @@ class Interface(Funcs):
                               command=self.lens_output)
         self.Retirar["font"] = ("Verdana", 10, "italic", "bold")
         self.Retirar.place(relx=0.05, rely=0.25, relwidth=0.90, relheight=0.05)
-    ######
+    #<<<<<
 
-    ######
+    #>>>>>
     #  OPÇÕES DE REGISTRAR SAÍDAS DE LENTES
     def reg_output(self):
+        print("Botão registro de saída clicado!".title())
         self.options()
 
     #  BOTÃO
@@ -278,7 +316,7 @@ class Interface(Funcs):
                                command=self.reg_output)
         self.RegSaida["font"] = ("Verdana", 10, "italic", "bold")
         self.RegSaida.place(relx=0.05, rely=0.31, relwidth=0.90, relheight=0.10)
-    ######
+    #<<<<<
 
     #  BOTÃO DE SAIR
     def button_Sair(self):
@@ -289,25 +327,37 @@ class Interface(Funcs):
 
 
 
+    #>>>>>
     # ENTRADA DE DADOS NA LABEL DO TITULO E INFORMAÇÕES
-    def entry_Login(self):
-        self.labelLogin = Label(self.frame_titulo, text="Usuário", bg="#ffd700")
-        self.labelLogin["font"] = ("Verdana", 10, "italic", "bold")
-        self.labelLogin.place(relx=0.02, rely=0.20, relwidth=0.15, relheight=0.20)
+    def logo(self):
+        self.fontepadraoLogo = ('Miso', '40')
+        self.logoText_1 = Label(self.frame_titulo, text='ÓTICAS', bg='#ffd700', font=self.fontepadraoLogo, fg='white')
+        self.logoText_2 = Label(self.frame_titulo, text='|', bg='#ffd700', font=self.fontepadraoLogo, fg='white')
+        self.logoText_3 = Label(self.frame_titulo, text='CAROL', bg='#ffd700', font=self.fontepadraoLogo, fg='#0000cd')
 
-        self.Login = Entry(self.frame_titulo)
+        self.logoText_1.place(relx=0.15, rely=0.03, relwidth=0.335, relheight=0.55)
+        self.logoText_2.place(relx=0.485, rely=0.014, relwidth=0.03, relheight=0.53)
+        self.logoText_3.place(relx=0.515, rely=0.03, relwidth=0.305, relheight=0.55)
+
+    def entry_Login(self):
+        self.labelLogin = Label(self.frame_titulo, text="Usuário:", bg="#ffd700")
+        self.labelLogin["font"] = ("Verdana", 10, "italic", "bold")
+        self.labelLogin.place(relx=0.02, rely=0.60, relwidth=0.11, relheight=0.20)
+
+        self.Login = Entry(self.frame_titulo, bg='#eee8aa')
         self.Login["font"] = ("Verdana", 10, "italic")
-        self.Login.place(relx=0.18, rely=0.20, relwidth=0.35, relheight=0.20)
+        self.Login.place(relx=0.14, rely=0.60, relwidth=0.35, relheight=0.20)
 
     def entry_Senha(self):
-        self.labelSenha = Label(self.frame_titulo, text="Senha", bg="#ffd700")
+        self.labelSenha = Label(self.frame_titulo, text="Senha:", bg="#ffd700")
         self.labelSenha["font"] = ("Verdana", 10, "italic", "bold")
-        self.labelSenha.place(relx=0.02, rely=0.60, relwidth=0.15, relheight=0.20)
+        self.labelSenha.place(relx=0.55, rely=0.60, relwidth=0.09, relheight=0.20)
 
-        self.Senha = Entry(self.frame_titulo)
+        self.Senha = Entry(self.frame_titulo, bg='#eee8aa')
         self.Senha["font"] = ("Verdana", 10, "italic")
         self.Senha["show"] = "*"
-        self.Senha.place(relx=0.18, rely=0.60, relwidth=0.35, relheight=0.20)
+        self.Senha.place(relx=0.65, rely=0.60, relwidth=0.32, relheight=0.20)
+    #<<<<<
 
 
 Interface()  # chamando a classe para iniciar
