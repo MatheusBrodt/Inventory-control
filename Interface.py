@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 import mysql.connector
 print('\033[31mRODANDO O PROGRAMA!\033[m')
 
@@ -48,6 +49,11 @@ class Funcs():
         self.store_Capt = self.storeEntry_Exit.get()
         self.seq_Capt = self.seqEntry_Exit.get()
         self.reason_Capt = self.reasonEntry_Exit.get()
+
+    def captura_dadosVis(self):
+        self.sphe_CaptVis = self.sphe_VisEntry.get()
+        self.cylin_CaptVis = self.cylin_VisEntry.get()
+        self.add_CaptVis = self.add_VisEntry.get()
 
     def verification_Int(self):
         self.captura_dados()
@@ -177,49 +183,104 @@ class Funcs():
             self.warning()
             print('ERRO AO INICIAR REGISTER COD')
 
+    def option_VisLens(self):
+        print("Botão de visualização clicado!".title())
+        self.connect_BD()
+        lista = self.cursor.execute(f"SELECT spherical, cylindrical, adicao, eye, material, laboratory, "
+                                    f"amount FROM stock WHERE spherical = '{self.sphe_CaptVis}' AND "
+                                    f"cylindrical = '{self.cylin_CaptVis}' AND adicao = '{self.add_CaptVis}'")
+        for i in lista:
+            self.listaCli.insert(lista, END, values=i)
+        self.conn.close()
+
+    def label_VisEst(self):
+        # LABELS
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.sphe_Vis = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
+        self.cylin_Vis = Label(self.frame_options, text='Cilindro:', font=self.fontepadrao, bg='#f0e68c')
+        self.add_Vis = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
+
+        # ENTRYS
+        self.sphe_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.cylin_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.add_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+
+        # LOCALIZAÇÃO DAS LABELS
+        self.sphe_Vis.place(relx=0.08, rely=0.03, relwidth=0.14, relheight=0.045)
+        self.cylin_Vis.place(relx=0.36, rely=0.03, relwidth=0.20, relheight=0.045)
+        self.add_Vis.place(relx=0.70, rely=0.03, relwidth=0.10, relheight=0.045)
+
+        # LOCALIZAÇÃO DAS ENTRYS
+        self.sphe_VisEntry.place(relx=0.21, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.cylin_VisEntry.place(relx=0.515, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.add_VisEntry.place(relx=0.80, rely=0.03, relwidth=0.10, relheight=0.045)
+
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
         self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
                                         bg='#f0e68c', fg='red')
 
-        self.text_warning_Label.place(relx=0.05, rely=0.60, relwidth=0.90, relheight=0.16)
+        self.text_warning_Label.place(relx=0.05, rely=0.84, relwidth=0.90, relheight=0.08)
 
     def label_and_entry(self):
         self.options()
-        self.button_Ir()
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         #  LABELS
         self.codBarras = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
         self.sphe_degree = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
         self.cylin_degree = Label(self.frame_options, text='Cilindrico:', font=self.fontepadrao, bg='#f0e68c')
-        self.add = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
-        self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
         self.lab = Label(self.frame_options, text='Laboratório:', font=self.fontepadrao, bg='#f0e68c')
         self.mat = Label(self.frame_options, text='Material:', font=self.fontepadrao, bg='#f0e68c')
+        self.add = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
+        self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
+
         #  ESTRADA DE DADOS
         self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
         self.sphe_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
         self.cylin_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.add_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.eye_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
         self.lab_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
         self.mat_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.add_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.eye_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+
         #  LOCALIZAÇÃO DAS LABELS
-        self.codBarras.place(relx=0.010, rely=0.08, relwidth=0.20, relheight=0.15)
-        self.sphe_degree.place(relx=0.44, rely=0.08, relwidth=0.17, relheight=0.15)
-        self.cylin_degree.place(relx=0.72, rely=0.08, relwidth=0.14, relheight=0.15)
-        self.add.place(relx=0.19, rely=0.48, relwidth=0.10, relheight=0.15)
-        self.eye.place(relx=0.625, rely=0.48, relwidth=0.15, relheight=0.15)
-        self.lab.place(relx=0.01, rely=0.275, relwidth=0.20, relheight=0.15)
-        self.mat.place(relx=0.50, rely=0.275, relwidth=0.20, relheight=0.15)
+        self.codBarras.place(relx=0.010, rely=0.03, relwidth=0.20, relheight=0.045)
+        self.sphe_degree.place(relx=0.44, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.cylin_degree.place(relx=0.72, rely=0.03, relwidth=0.14, relheight=0.045)
+        self.lab.place(relx=0.01, rely=0.11, relwidth=0.20, relheight=0.045)
+        self.mat.place(relx=0.50, rely=0.11, relwidth=0.20, relheight=0.045)
+        self.add.place(relx=0.19, rely=0.19, relwidth=0.10, relheight=0.045)
+        self.eye.place(relx=0.625, rely=0.19, relwidth=0.15, relheight=0.045)
+
         #  LOCALIZAÇÃO DAS ENTRY
-        self.codBarrasEntry.place(relx=0.22, rely=0.10, relwidth=0.23, relheight=0.11)
-        self.sphe_Entry.place(relx=0.59, rely=0.10, relwidth=0.12, relheight=0.11)
-        self.cylin_Entry.place(relx=0.86, rely=0.10, relwidth=0.12, relheight=0.11)
-        self.add_Entry.place(relx=0.30, rely=0.50, relwidth=0.08, relheight=0.11)
-        self.eye_Entry.place(relx=0.75, rely=0.50, relwidth=0.08, relheight=0.11)
-        self.lab_Entry.place(relx=0.20, rely=0.295, relwidth=0.30, relheight=0.11)
-        self.mat_Entry.place(relx=0.665, rely=0.295, relwidth=0.30, relheight=0.11)
+        self.codBarrasEntry.place(relx=0.22, rely=0.03, relwidth=0.23, relheight=0.045)
+        self.sphe_Entry.place(relx=0.59, rely=0.03, relwidth=0.12, relheight=0.045)
+        self.cylin_Entry.place(relx=0.86, rely=0.03, relwidth=0.12, relheight=0.045)
+        self.lab_Entry.place(relx=0.20, rely=0.11, relwidth=0.30, relheight=0.045)
+        self.mat_Entry.place(relx=0.665, rely=0.11, relwidth=0.30, relheight=0.045)
+        self.add_Entry.place(relx=0.30, rely=0.19, relwidth=0.08, relheight=0.045)
+        self.eye_Entry.place(relx=0.75, rely=0.19, relwidth=0.08, relheight=0.045)
+
+    def listaFrame(self):
+        self.listaCli = ttk.Treeview(self.frame_options, height=3, columns=( 'col1', 'col2', 'col3', 'col4',
+                                                                           'col5', 'col6'))
+        self.listaCli.heading('#0', text='Esférico')
+        self.listaCli.heading('col1', text='Cilíndro')
+        self.listaCli.heading('col2', text='Adição')
+        self.listaCli.heading('col3', text='Olho')
+        self.listaCli.heading('col4', text='Material')
+        self.listaCli.heading('col5', text='Laboratório')
+        self.listaCli.heading('col6', text='Unidade')
+
+        self.listaCli.column('#0', width=25)
+        self.listaCli.column('col1', width=25)
+        self.listaCli.column('col2', width=25)
+        self.listaCli.column('col3', width=15)
+        self.listaCli.column('col4', width=80)
+        self.listaCli.column('col5', width=80)
+        self.listaCli.column('col6', width=20)
+
+        self.listaCli.place(relx=0.025, rely=0.15, relwidth=0.95, relheight=0.60) # para tapar colocar 0.44
 
 
 ### FRONT END ###
@@ -231,7 +292,6 @@ class Interface(Funcs):
         self.titulo()
         self.informations()
         self.services()
-        self.options()
         self.button_Cadastrar()
         self.button_VisEstoque()
         self.button_LensZero()
@@ -243,8 +303,8 @@ class Interface(Funcs):
         self.logo()
         self.date_Today()
         root.mainloop()
-
     # FRAMES
+
     def tela(self):  # caracteristicas da tela
         self.root.title("Gerenciamento Laboratório Carol")
         self.root.geometry("1300x720")
@@ -275,7 +335,7 @@ class Interface(Funcs):
     def options(self):
         self.frame_options = Frame(self.root, bd=-4, bg="#f0e68c", highlightbackground="#1c1c1c",
                                    highlightthickness=2)
-        self.frame_options.place(relx=0.14, rely=0.21, relwidth=0.43, relheight=0.30)
+        self.frame_options.place(relx=0.14, rely=0.21, relwidth=0.43, relheight=0.75)
 
 
     ### BOTÕES ###
@@ -292,7 +352,7 @@ class Interface(Funcs):
         self.Ir = Button(self.frame_options, text='Cadastrar', font=self.fontepadrao, bg='#f0e68c',
                          command=self.option_Ir)
 
-        self.Ir.place(relx=0.425, rely=0.80, relwidth=0.15, relheight=0.15)
+        self.Ir.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     #<<<<<
 
     #>>>>>
@@ -307,14 +367,31 @@ class Interface(Funcs):
         self.exitButton = Button(self.frame_options, text='Retirar', font=self.fontepadrao, bg='#f0e68c',
                          command=self.option_ButtonExit)
 
-        self.exitButton.place(relx=0.425, rely=0.80, relwidth=0.15, relheight=0.15)
+        self.exitButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     #<<<<<
+
+    # >>>>>
+    # OPÇÕES DO BOTÃO ENTER PARA VISUALIZAR LENTES
+    def option_ButtonVis(self):
+        print("Botão 'ENTER/VISUALIZAR' clicado!")
+        self.captura_dadosVis()
+        self.option_VisLens()
+
+    #  BOTÃO ENTER DE VISUALIZAÇÃO DE LENTES
+    def button_Vis(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.exitButton = Button(self.frame_options, text='Visualizar', font=self.fontepadrao, bg='#f0e68c',
+                                 command=self.option_ButtonVis)
+
+        self.exitButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
+    # <<<<<
 
     #>>>>>
     #  OPÇOES DE CADASTRO DE LENTES
     def option_RegisterLens(self):
         print("Botão de cadastro clicado!".title())
         self.label_and_entry()
+        self.button_Ir()
     #  BOTÃO CADASTRAR
     def button_Cadastrar(self):
         self.CadastrarLente = Button(self.frame_buttons, text="Cadastrar", command=self.option_RegisterLens,
@@ -325,13 +402,17 @@ class Interface(Funcs):
 
     #>>>>>
     #  OPÇÕES DE VISUALIZAÇÃO DO ESTOQUE
-    def exibirOpcoes(self):
+    def exibirOpcoes_Vis(self):
         print("Botão visualizar estoque clicado!".title())
-        self.label_and_entry()
+        self.options()
+        self.label_VisEst()
+        self.listaFrame()
+        self.button_Vis() # BOTAO ENTER DE VISUALIZAR
+
     #  BOTÃO VISUALIZAR
     def button_VisEstoque(self):
         self.VisEstoque = Button(self.frame_buttons, text="Vis. Estoque", bd=2, bg="#c0c0c0", fg="black",
-                                 command=self.exibirOpcoes)
+                                 command=self.exibirOpcoes_Vis)
         self.VisEstoque["font"] = ("Verdana", 10, "italic", "bold")
         self.VisEstoque.place(relx=0.05, rely=0.08, relwidth=0.90, relheight=0.05)
     #<<<<<
@@ -367,23 +448,17 @@ class Interface(Funcs):
         self.seqEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
         self.reasonEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
         # PLACES ENTRYS E LABELS
-        self.codBarrasEntry_Exit.place(relx=0.245, rely=0.08, relwidth=0.25, relheight=0.12)
-        self.storeEntry_Exit.place(relx=0.595, rely=0.08, relwidth=0.08, relheight=0.12)
-        self.seqEntry_Exit.place(relx=0.86, rely=0.08, relwidth=0.11, relheight=0.12)
-        self.reasonEntry_Exit.place(relx=0.45, rely=0.30, relwidth=0.20, relheight=0.12)
+        self.codBarrasEntry_Exit.place(relx=0.245, rely=0.03, relwidth=0.25, relheight=0.045)
+        self.storeEntry_Exit.place(relx=0.595, rely=0.03, relwidth=0.08, relheight=0.045)
+        self.seqEntry_Exit.place(relx=0.86, rely=0.03, relwidth=0.11, relheight=0.045)
+        self.reasonEntry_Exit.place(relx=0.45, rely=0.11, relwidth=0.20, relheight=0.045)
 
-        self.codBarras.place(relx=0.02, rely=0.07, relwidth=0.22, relheight=0.15)
-        self.store_Exit.place(relx=0.51, rely=0.07, relwidth=0.08, relheight=0.15)
-        self.seq_Exit.place(relx=0.70, rely=0.07, relwidth=0.14, relheight=0.15)
-        self.reason_Exit.place(relx=0.34, rely=0.29, relwidth=0.10, relheight=0.15)
+        self.codBarras.place(relx=0.02, rely=0.03, relwidth=0.22, relheight=0.045)
+        self.store_Exit.place(relx=0.51, rely=0.03, relwidth=0.08, relheight=0.045)
+        self.seq_Exit.place(relx=0.70, rely=0.03, relwidth=0.14, relheight=0.045)
+        self.reason_Exit.place(relx=0.34, rely=0.11, relwidth=0.10, relheight=0.045)
 
-    #  BOTÃO RETIRAR
-    def button_Retirar(self):
-        self.Retirar = Button(self.frame_buttons, text="Retirar", bd=2, bg="#c0c0c0", fg="black",
-                              command=self.lens_output)
-        self.Retirar["font"] = ("Verdana", 10, "italic", "bold")
-        self.Retirar.place(relx=0.05, rely=0.25, relwidth=0.90, relheight=0.05)
-
+    # FUNÇÃO DE REMOVER LENTES
     def remove_LensAdd(self):
         self.verification_IntExit()
         if self.verification_IntExit():
@@ -407,6 +482,13 @@ class Interface(Funcs):
                 self.text_warning = 'LENTE NÃO EXISTE'
                 self.warning()
                 print('\033[31mNÃO EXISTE A LENTE NO ESTOQUE\033[m')
+
+    #  BOTÃO RETIRAR
+    def button_Retirar(self):
+        self.Retirar = Button(self.frame_buttons, text="Retirar", bd=2, bg="#c0c0c0", fg="black",
+                              command=self.lens_output)
+        self.Retirar["font"] = ("Verdana", 10, "italic", "bold")
+        self.Retirar.place(relx=0.05, rely=0.25, relwidth=0.90, relheight=0.05)
     #<<<<<<
 
     #>>>>>>
