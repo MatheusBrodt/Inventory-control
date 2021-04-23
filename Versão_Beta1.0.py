@@ -23,10 +23,6 @@ class Funcs():
             self.text_warning = 'ERRO NO BANCO DE DADOS'
             self.warning()
             print('\033[31mErro ao conectar no BD!\033[m')
-        else:
-            self.text_warning = 'ERRO NO BANCO DE DADOS'
-            self.warning()
-            print('\033[31mErro ao conectar no BD!\033[m')
 
     def clear(self):
         self.codigo_Capt = self.codBarrasEntry.delete(0, END)
