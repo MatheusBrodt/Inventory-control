@@ -14,10 +14,18 @@ class Funcs():
 
     def connect_BD(self):
         try:
+            self.text_warning = ''
+            self.warning()
             self.conn = mysql.connector.connect(host='localhost', user='root', password='', database="lab_carol")
             self.cursor = self.conn.cursor()
             print('Conectado no BD')
-        except:
+        except mysql.connector.errors.ProgrammingError:  # AJUSTAR EXCESSÃO DE ERRO
+            self.text_warning = 'ERRO NO BANCO DE DADOS'
+            self.warning()
+            print('\033[31mErro ao conectar no BD!\033[m')
+        else:
+            self.text_warning = 'ERRO NO BANCO DE DADOS'
+            self.warning()
             print('\033[31mErro ao conectar no BD!\033[m')
 
     def clear(self):
@@ -34,6 +42,11 @@ class Funcs():
         self.store_Capt = self.storeEntry_Exit.delete(0, END)
         self.seq_Capt = self.seqEntry_Exit.delete(0, END)
         self.reason_Capt = self.reasonEntry_Exit.delete(0, END)
+
+    def clear_dadosVis(self):
+        self.spheClear_CaptVis = self.sphe_VisEntry.delete(0,END)
+        self.cylinClear_CaptVis = self.cylin_VisEntry.delete(0,END)
+        self.addClear_CaptVis = self.add_VisEntry.delete(0, END)
 
     def captura_dados(self):
         self.codigo_Capt = self.codBarrasEntry.get()
@@ -54,6 +67,24 @@ class Funcs():
         self.sphe_CaptVis = self.sphe_VisEntry.get()
         self.cylin_CaptVis = self.cylin_VisEntry.get()
         self.add_CaptVis = self.add_VisEntry.get()
+
+    def captura_dadosLensZero(self):
+        self.spheMax_LensZeroCapt = self.spheMax_LensZero.get()
+        self.spheMin_LensZeroCapt = self.spheMin_LensZero.get()
+        self.cylinEntry_LensZeroCapt = self.cylinEntry_LensZero.get()
+        self.matEntry_LensZeroCapt =  self.matEntry_LensZero.get()
+        self.labEntry_LensZeroCapt = self.labEntry_LensZero.get()
+
+    def captura_dadosRegSaida(self):
+        self.data_InicioEntryCapt = self.data_InicioEntry.get()
+        self.data_FimEntryCapt = self.data_FimEntry.get()
+        self.store_RegEntryCapt = self.store_RegEntry.get()
+        if self.data_InicioEntryCapt == '' or self.data_FimEntryCapt == '' or self.store_RegEntryCapt == '':
+            self.text_warning = 'PREENCHA TODOS OS CAMPOS'
+            self.warning()
+        else:
+            self.text_warning = ''
+            self.warning()
 
     def verification_Int(self):
         self.captura_dados()
@@ -122,7 +153,7 @@ class Funcs():
                 self.warning()
                 self.register_cod()
 
-    def insert_Dados(self, event):
+    def insert_Dados(self, event):  # PARA PREENCHER OS CAMPOS DA FUNÇÃO DE CDASTRO AUTOMATICAMENTE
         self.connect_BD()
         self.cursor.execute(f"SELECT material, spherical, cylindrical, adicao, eye, laboratory FROM stock")
         result = self.cursor.fetchall()
@@ -147,6 +178,12 @@ class Funcs():
                 self.insert_Dados(event='')
                 self.cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {self.codigo_Capt}")
                 self.conn.commit()
+                #  ADICIONANDO NA LISTA DE EXIBIÇÃO
+                self.cursor.execute(f'SELECT spherical, cylindrical, adicao, eye, material, laboratory, amount '
+                                    f'FROM stock WHERE cod_barras = {self.codigo_Capt}')
+                lista = self.cursor.fetchall()
+                for dado in lista:
+                    self.listaCli.insert('', END, values=(dado))
                 self.conn.close()
                 self.text_warning = 'LENTE ADICIONADA'
                 self.warning()
@@ -166,6 +203,14 @@ class Funcs():
                                             f"('{self.codigo_Capt}', '{self.mat_Capt}', '{self.sphe_Capt}', "
                                             f"'{self.cylin_Capt}', '{self.add_Capt}', '{self.eye_Capt}', "
                                             f"'{self.lab_Capt}', '1' )")
+                        self.conn.commit()
+                        #  ADICIONANDO NA LISTA DE EXIBIÇÃO
+                        self.cursor.execute(f'SELECT spherical, cylindrical, adicao, eye, material, laboratory, amount '
+                                            f'FROM stock WHERE cod_barras = {self.codigo_Capt}')
+                        lista = self.cursor.fetchall()
+                        for dado in lista:
+                            self.listaCli.insert('', END, values=(dado))
+                        self.conn.close()
                         self.text_warning = 'LENTE CADASTRADA'
                         self.warning()
                         self.clear()
@@ -186,14 +231,59 @@ class Funcs():
     def option_VisLens(self):
         print("Botão de visualização clicado!".title())
         self.connect_BD()
-        lista = self.cursor.execute(f"SELECT spherical, cylindrical, adicao, eye, material, laboratory, "
-                                    f"amount FROM stock WHERE spherical = '{self.sphe_CaptVis}' AND "
-                                    f"cylindrical = '{self.cylin_CaptVis}' AND adicao = '{self.add_CaptVis}'")
-        for i in lista:
-            self.listaCli.insert(lista, END, values=i)
+        self.cursor.execute(f"SELECT spherical, cylindrical, adicao, eye, material, laboratory, "
+                            f"amount FROM stock WHERE spherical = '{self.sphe_CaptVis}' AND "
+                            f"cylindrical = '-{self.cylin_CaptVis}' AND adicao = '{self.add_CaptVis}'")
+        lista = self.cursor.fetchall()
+        self.listaCli.delete(*self.listaCli.get_children())
+
+        cont = 0
+        for dado in lista:
+            if dado[-1] != 0:
+                cont += 1
+                self.listaCli.insert('', END, values=(dado))
+
+        self.conn.close()
+        if cont == 0:
+            self.text_warning = 'NÃO TEM NO ESTOQUE'
+            self.warning()
+
+    def print_RegSaida(self):
+        self.connect_BD()
+        self.cursor.execute(f"SELECT lens.data, stock.spherical, stock.cylindrical, stock.adicao, stock.eye, "
+                            f"stock.material, stock.laboratory, lens.store, lens.sequencia, lens.reason "
+                            f"FROM stock JOIN lens ON lens.cod_barras = stock. cod_barras "
+                            f"WHERE lens.data BETWEEN '{self.data_InicioEntryCapt}' AND '{self.data_FimEntryCapt}' "
+                            f"AND lens.store = '{self.store_RegEntryCapt}' ORDER BY lens.data")
+        lista = self.cursor.fetchall()
+        self.listaReg.delete(*self.listaReg.get_children())
+        for dado in lista:
+            self.listaReg.insert('', END, values=(dado))
         self.conn.close()
 
-    def label_VisEst(self):
+    def label_RegisSaida(self):
+        # LABELS
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.data_Inicio = Label(self.frame_options, text='Data Início:', font=self.fontepadrao, bg='#f0e68c')
+        self.data_Fim = Label(self.frame_options, text='Data Fim:', font=self.fontepadrao, bg='#f0e68c')
+        self.store_Reg = Label(self.frame_options, text='Loja:', font=self.fontepadrao, bg='#f0e68c')
+
+        # ENTRYS
+        self.data_InicioEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.data_FimEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.store_RegEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+
+        # LOCALIZAÇÃO DAS LABELS
+        self.data_Inicio.place(relx=0.02, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.data_Fim.place(relx=0.41, rely=0.03, relwidth=0.16, relheight=0.045)
+        self.store_Reg.place(relx=0.78, rely=0.03, relwidth=0.10, relheight=0.045)
+
+        # LOCALIZAÇÃO DAS ENTRYS
+        self.data_InicioEntry.place(relx=0.19, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.data_FimEntry.place(relx=0.56, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.store_RegEntry.place(relx=0.87, rely=0.03, relwidth=0.10, relheight=0.045)
+
+    def label_VisEst(self):  # LABELS E ENTRYS DA FUNÇÃO DE VISUALIZAÇÃO DE LENTES
         # LABELS
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.sphe_Vis = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
@@ -206,14 +296,149 @@ class Funcs():
         self.add_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
 
         # LOCALIZAÇÃO DAS LABELS
-        self.sphe_Vis.place(relx=0.08, rely=0.03, relwidth=0.14, relheight=0.045)
-        self.cylin_Vis.place(relx=0.36, rely=0.03, relwidth=0.20, relheight=0.045)
-        self.add_Vis.place(relx=0.70, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.sphe_Vis.place(relx=0.08, rely=0.10, relwidth=0.14, relheight=0.045)
+        self.cylin_Vis.place(relx=0.36, rely=0.10, relwidth=0.20, relheight=0.045)
+        self.add_Vis.place(relx=0.70, rely=0.10, relwidth=0.10, relheight=0.045)
 
         # LOCALIZAÇÃO DAS ENTRYS
-        self.sphe_VisEntry.place(relx=0.21, rely=0.03, relwidth=0.10, relheight=0.045)
-        self.cylin_VisEntry.place(relx=0.515, rely=0.03, relwidth=0.10, relheight=0.045)
-        self.add_VisEntry.place(relx=0.80, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.sphe_VisEntry.place(relx=0.21, rely=0.10, relwidth=0.10, relheight=0.045)
+        self.cylin_VisEntry.place(relx=0.515, rely=0.10, relwidth=0.10, relheight=0.045)
+        self.add_VisEntry.place(relx=0.80, rely=0.10, relwidth=0.10, relheight=0.045)
+
+    def listaFrame_Reg(self):
+        self.listaReg = ttk.Treeview(self.frame_options, height=6, columns=('col1', 'col2', 'col3', 'col4', 'col5',
+                                                                            'col6', 'col7', 'col8', 'col9', 'col10'))
+
+        self.listaReg.heading('#0')
+        self.listaReg.heading('col1', text='Data')
+        self.listaReg.heading('col2', text='Esférico')
+        self.listaReg.heading('col3', text='Cilindro')
+        self.listaReg.heading('col4', text='Adição')
+        self.listaReg.heading('col5', text='Olho')
+        self.listaReg.heading('col6', text='Material')
+        self.listaReg.heading('col7', text='Laboratório')
+        self.listaReg.heading('col8', text='Loja')
+        self.listaReg.heading('col9', text='Sequência')
+        self.listaReg.heading('col10', text='Motivo')
+
+        self.listaReg.column('#0', width=0)
+        self.listaReg.column('col1', width=40)
+        self.listaReg.column('col2', width=5)
+        self.listaReg.column('col3', width=5)
+        self.listaReg.column('col4', width=5)
+        self.listaReg.column('col5', width=5)
+        self.listaReg.column('col6', width=60)
+        self.listaReg.column('col7', width=20)
+        self.listaReg.column('col8', width=20)
+        self.listaReg.column('col9', width=20)
+        self.listaReg.column('col10', width=50)
+
+        self.listaReg.place(relx=0.025, rely=0.10, relwidth=0.95, relheight=0.73)
+
+    def label_LensZero(self):
+        # LABELS
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.sphe_LensZero = Label(self.frame_options, text='Esférico: -', font=self.fontepadrao, bg='#f0e68c')
+        self.bar_LensZero = Label(self.frame_options, text='/ +', font=self.fontepadrao, bg='#f0e68c')
+        self.cylin_LensZero = Label(self.frame_options, text='Cilíndro:', font=self.fontepadrao, bg='#f0e68c')
+        self.mat_LensZero = Label(self.frame_options, text='Material:', font=self.fontepadrao, bg='#f0e68c')
+        self.lab_LensZero = Label(self.frame_options, text='Laborátorio:', font=self.fontepadrao, bg='#f0e68c')
+
+        # ENTRYS
+        self.spheMax_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.spheMin_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.cylinEntry_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.matEntry_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.labEntry_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+
+        # LOCALIZAÇÃO DAS LABELS
+        self.sphe_LensZero.place(relx=0.18, rely=0.03, relwidth=0.14, relheight=0.045)
+        self.bar_LensZero.place(relx=0.43, rely=0.03, relwidth=0.04, relheight=0.045)
+        self.cylin_LensZero.place(relx=0.60, rely=0.03, relwidth=0.11, relheight=0.045)
+        self.mat_LensZero.place(relx=0.03, rely=0.13, relwidth=0.12, relheight=0.045)
+        self.lab_LensZero.place(relx=0.50, rely=0.13, relwidth=0.16, relheight=0.045)
+
+        # LOCALIZAÇÃO DAS ENTRYS
+        self.spheMax_LensZero.place(relx=0.32, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.spheMin_LensZero.place(relx=0.475, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.cylinEntry_LensZero.place(relx=0.72, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.matEntry_LensZero.place(relx=0.16, rely=0.13, relwidth=0.30, relheight=0.045)
+        self.labEntry_LensZero.place(relx=0.67, rely=0.13, relwidth=0.30, relheight=0.045)
+
+    def lensZero(self):
+        self.connect_BD()
+        self.cursor.execute(f"SELECT spherical, cylindrical, material, laboratory FROM stock "
+                        f"WHERE spherical > -{self.spheMax_LensZeroCapt} AND spherical < {self.spheMin_LensZeroCapt} "
+                         f"AND cylindrical > -{self.cylinEntry_LensZeroCapt} AND "
+                         f"material = '{self.matEntry_LensZeroCapt}' AND laboratory = '{self.labEntry_LensZeroCapt}' "
+                         f"AND amount = 0")
+
+        lista = self.cursor.fetchall()
+        self.listaZero.delete(*self.listaZero.get_children())
+        for dado in lista:
+            self.listaZero.insert('', END, values=(dado))
+        self.cursor.close()
+
+    def lista_FrameZero(self):
+        self.listaZero = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4'))
+
+        self.listaZero.heading('#0')
+        self.listaZero.heading('col1', text='Esférico')
+        self.listaZero.heading('col2', text='Cilindro')
+        self.listaZero.heading('col3', text='Material')
+        self.listaZero.heading('col4', text='Laboratório')
+
+        self.listaZero.column('#0', width=0)
+        self.listaZero.column('col1', width=30)
+        self.listaZero.column('col2', width=30)
+        self.listaZero.column('col3', width=80)
+        self.listaZero.column('col4', width=80)
+
+        self.listaZero.place(relx=0.025, rely=0.20, relwidth=0.95, relheight=0.64)
+
+    def remove_LensAdd(self):  # FUNÇÃO PARA REMOVER LENTES
+        self.verification_IntExit()
+        if self.verification_IntExit():
+            self.captura_dadosRemove()
+            # CHAMANDO BANCO DE DADOS
+            self.connect_BD()
+            self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
+            result = self.cursor.fetchone()
+            if result is not None:
+                self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
+                self.cursor.execute(f"INSERT INTO lens VALUES "
+                                    f"('', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
+                                    f"'{self.seq_Capt}', '{self.reason_Capt}')")
+                self.conn.commit()
+                dados = (self.codRemove_Capt, self.store_Capt, self.seq_Capt, self.reason_Capt)
+                self.lista_Exit.insert('', END, values=(dados))
+
+                self.conn.close()
+                self.text_warning = 'LENTE RETIRADA'
+                self.warning()
+                self.clear_Exit()
+                print('\033[31mINSERIDA NA TABELA DE SAÍDA DE LENTES!\033[m')
+            else:
+                self.text_warning = 'LENTE NÃO EXISTE'
+                self.warning()
+                print('\033[31mNÃO EXISTE A LENTE NO ESTOQUE\033[m')
+
+    def lista_FrameExit(self):
+        self.lista_Exit = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4'))
+
+        self.lista_Exit.heading('#0', text='ID')
+        self.lista_Exit.heading('col1', text='Cod. Barras')
+        self.lista_Exit.heading('col2', text='Loja')
+        self.lista_Exit.heading('col3', text='Sequência')
+        self.lista_Exit.heading('col4', text='Motivo')
+
+        self.lista_Exit.column('#0', width=0)
+        self.lista_Exit.column('col1', width=80)
+        self.lista_Exit.column('col2', width=30)
+        self.lista_Exit.column('col3', width=30)
+        self.lista_Exit.column('col4', width=120)
+
+        self.lista_Exit.place(relx=0.025, rely=0.18, relwidth=0.95, relheight=0.65)
 
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
@@ -224,6 +449,7 @@ class Funcs():
 
     def label_and_entry(self):
         self.options()
+        self.listaFrame()
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         #  LABELS
         self.codBarras = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
@@ -261,26 +487,29 @@ class Funcs():
         self.add_Entry.place(relx=0.30, rely=0.19, relwidth=0.08, relheight=0.045)
         self.eye_Entry.place(relx=0.75, rely=0.19, relwidth=0.08, relheight=0.045)
 
-    def listaFrame(self):
+    def listaFrame(self):  # FUNÇÃO CADASTRO TAMBÉM USA ESSA LISTA
         self.listaCli = ttk.Treeview(self.frame_options, height=3, columns=( 'col1', 'col2', 'col3', 'col4',
-                                                                           'col5', 'col6'))
-        self.listaCli.heading('#0', text='Esférico')
-        self.listaCli.heading('col1', text='Cilíndro')
-        self.listaCli.heading('col2', text='Adição')
-        self.listaCli.heading('col3', text='Olho')
-        self.listaCli.heading('col4', text='Material')
-        self.listaCli.heading('col5', text='Laboratório')
-        self.listaCli.heading('col6', text='Unidade')
+                                                                             'col5', 'col6', 'col7'))
 
-        self.listaCli.column('#0', width=25)
-        self.listaCli.column('col1', width=25)
-        self.listaCli.column('col2', width=25)
-        self.listaCli.column('col3', width=15)
-        self.listaCli.column('col4', width=80)
-        self.listaCli.column('col5', width=80)
-        self.listaCli.column('col6', width=20)
+        self.listaCli.heading('#0', text='ID')
+        self.listaCli.heading('col1', text='Esférico')
+        self.listaCli.heading('col2', text='Cilíndro')
+        self.listaCli.heading('col3', text='Adição')
+        self.listaCli.heading('col4', text='Olho')
+        self.listaCli.heading('col5', text='Material')
+        self.listaCli.heading('col6', text='Laboratório')
+        self.listaCli.heading('col7', text='Unidade')
 
-        self.listaCli.place(relx=0.025, rely=0.15, relwidth=0.95, relheight=0.60) # para tapar colocar 0.44
+        self.listaCli.column('#0', width=0)
+        self.listaCli.column('col1', width=20)
+        self.listaCli.column('col2', width=20)
+        self.listaCli.column('col3', width=20)
+        self.listaCli.column('col4', width=5)
+        self.listaCli.column('col5', width=140)
+        self.listaCli.column('col6', width=50)
+        self.listaCli.column('col7', width=20)
+
+        self.listaCli.place(relx=0.025, rely=0.26, relwidth=0.95, relheight=0.58)
 
 
 ### FRONT END ###
@@ -376,6 +605,7 @@ class Interface(Funcs):
         print("Botão 'ENTER/VISUALIZAR' clicado!")
         self.captura_dadosVis()
         self.option_VisLens()
+        self.clear_dadosVis()
 
     #  BOTÃO ENTER DE VISUALIZAÇÃO DE LENTES
     def button_Vis(self):
@@ -385,6 +615,36 @@ class Interface(Funcs):
 
         self.exitButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # <<<<<
+
+    # >>>>>
+    # OPÇÕES DO BOTÃO ENTER DE BUSCAR LENTES ZERADAS
+    def option_ButtonBuscar(self):
+        print("Botão 'ENTER/BUSCAR LENS ZERO' clicado!")
+        self.captura_dadosLensZero()
+        self.lensZero()
+
+    #  BOTÃO ENTER DE BUSCAR LENTES ZERADAS
+    def button_LensZeroEnter(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.lensZeroButton = Button(self.frame_options, text='Buscar', font=self.fontepadrao, bg='#f0e68c',
+                         command=self.option_ButtonBuscar)
+
+        self.lensZeroButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
+
+    #>>>>>
+    def option_ButtonReg(self):
+        print("Botão 'ENTER/REGISTRO' clicado!")
+        self.captura_dadosRegSaida()
+        self.print_RegSaida()
+
+    def button_RegEnter(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.button_RegEn = Button(self.frame_options, text='Procurar', font=self.fontepadrao, bg='#f0e68c',
+                                     command=self.option_ButtonReg)
+
+        self.button_RegEn.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
+
+    #<<<<<
 
     #>>>>>
     #  OPÇOES DE CADASTRO DE LENTES
@@ -422,6 +682,9 @@ class Interface(Funcs):
     def zero_lens(self):
         print("Botão lentes em falta clicado!".title())
         self.options()
+        self.label_LensZero()
+        self.lista_FrameZero()
+        self.button_LensZeroEnter()
     # BOTÃO LENTES ZERADAS
     def button_LensZero(self):
         self.LensZero = Button(self.frame_buttons, text="Lentes\nem\nFalta", bd=2, bg="#c0c0c0", fg="black",
@@ -435,6 +698,7 @@ class Interface(Funcs):
     def lens_output(self):
         print("Botão retirar lente clicado!".title())
         self.options()
+        self.lista_FrameExit()
         self.button_Exit()
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         # LABELS  >>>>  CÓDIGO, SEQ, MOTIVO, LOJA
@@ -458,31 +722,6 @@ class Interface(Funcs):
         self.seq_Exit.place(relx=0.70, rely=0.03, relwidth=0.14, relheight=0.045)
         self.reason_Exit.place(relx=0.34, rely=0.11, relwidth=0.10, relheight=0.045)
 
-    # FUNÇÃO DE REMOVER LENTES
-    def remove_LensAdd(self):
-        self.verification_IntExit()
-        if self.verification_IntExit():
-            self.captura_dadosRemove()
-            # CHAMANDO BANCO DE DADOS
-            self.connect_BD()
-            self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
-            result = self.cursor.fetchone()
-            if result is not None:
-                self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
-                self.cursor.execute(f"INSERT INTO lens VALUES "
-                                    f"('', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
-                                    f"'{self.seq_Capt}', '{self.reason_Capt}')")
-                self.conn.commit()
-                self.conn.close()
-                self.text_warning = 'LENTE RETIRADA'
-                self.warning()
-                self.clear_Exit()
-                print('\033[31mINSERIDA NA TABELA DE SAÍDA DE LENTES!\033[m')
-            else:
-                self.text_warning = 'LENTE NÃO EXISTE'
-                self.warning()
-                print('\033[31mNÃO EXISTE A LENTE NO ESTOQUE\033[m')
-
     #  BOTÃO RETIRAR
     def button_Retirar(self):
         self.Retirar = Button(self.frame_buttons, text="Retirar", bd=2, bg="#c0c0c0", fg="black",
@@ -496,6 +735,9 @@ class Interface(Funcs):
     def reg_output(self):
         print("Botão registro de saída clicado!".title())
         self.options()
+        self.label_RegisSaida()
+        self.listaFrame_Reg()
+        self.button_RegEnter()
 
     #  BOTÃO
     def button_RegSaida(self):
