@@ -187,38 +187,29 @@ class Funcs():
                 print(f'\033[34mLente adicionada com sucesso!\033[m'.title())
             else:
                 print('Não existe esta lente na base de dados! REGISTER COD'.title())
-                self.text_warning = 'CADASTRAR LENTE'
+                self.text_warning = 'DIGITE LAB. E MATERIAL'
                 self.warning()
-                try:
-                    self.captura_dados()
-                    if self.mat_Capt != '':  # SE NÃO EXISTIR O CÓDIGO CADASTRADO
-                        print('\033[31mEntrando no cadastro de lentes após o campo material ter sido preenchido!\033[m')
-                        self.label_and_entry(); print('Chamando "LABEL AND ENTRY"')
-                        self.connect_BD()
-                        self.cursor.execute(f"INSERT INTO stock VALUES "
-                                            f"('{self.codigo_Capt}', '{self.mat_Capt}', '{self.sphe_Capt}', "
-                                            f"'{self.cylin_Capt}', '{self.add_Capt}', '{self.eye_Capt}', "
-                                            f"'{self.lab_Capt}', '1' )")
-                        self.conn.commit()
-                        #  ADICIONANDO NA LISTA DE EXIBIÇÃO
-                        self.cursor.execute(f'SELECT spherical, cylindrical, adicao, eye, material, laboratory, amount '
-                                            f'FROM stock WHERE cod_barras = {self.codigo_Capt}')
-                        lista = self.cursor.fetchall()
-                        for dado in lista:
-                            self.listaCli.insert('', END, values=(dado))
-                        self.conn.close()
-                        self.text_warning = 'LENTE CADASTRADA'
-                        self.warning()
-                        self.clear()
-                        print('\033[31mCadastrada lente ixesistete!\033[m'.title())
-                    else:
-                        self.text_warning = 'DIGITE O MATERIAL'
-                        self.warning()
-                        print('CAMPO MATERIAL VAZIO')
-                except:
-                    self.text_warning = 'ERRO AO INSERIR DADOS'
+                self.captura_dados()
+                if self.mat_Capt != '':  # SE NÃO EXISTIR O CÓDIGO CADASTRADO
+                    print('\033[31mEntrando no cadastro de lentes após o campo material ter sido preenchido!\033[m')
+                    self.label_and_entry()
+                    self.connect_BD()
+                    self.cursor.execute(f"INSERT INTO stock VALUES "
+                                        f"('{self.codigo_Capt}', '{self.mat_Capt}', '{self.sphe_Capt}', "
+                                        f"'{self.cylin_Capt}', '{self.add_Capt}', '{self.eye_Capt}', "
+                                        f"'{self.lab_Capt}', '1' )")
+                    self.conn.commit()
+                    #  ADICIONANDO NA LISTA DE EXIBIÇÃO
+                    self.cursor.execute(f'SELECT spherical, cylindrical, adicao, eye, material, laboratory, amount '
+                                        f'FROM stock WHERE cod_barras = {self.codigo_Capt}')
+                    lista = self.cursor.fetchall()
+                    for dado in lista:
+                        self.listaCli.insert('', END, values=(dado))
+                    self.conn.close()
+                    self.text_warning = 'LENTE CADASTRADA'
                     self.warning()
-                    print('ERRO AO INSERIR DADOS 1')
+                    self.clear()
+                    print('\033[31mCadastrada Lente Inesistete!\033[m')
         except:
             self.text_warning = 'ERRO AO INSERIR DADOS'
             self.warning()
@@ -231,7 +222,6 @@ class Funcs():
                             f"amount FROM stock WHERE spherical = '{self.sphe_CaptVis}' AND "
                             f"cylindrical = '-{self.cylin_CaptVis}' AND adicao = '{self.add_CaptVis}'")
         lista = self.cursor.fetchall()
-        self.listaCli.delete(*self.listaCli.get_children())
 
         cont = 0
         for dado in lista:
@@ -570,6 +560,7 @@ class Interface(Funcs):
         print("Botão 'ir' clicado!".title())
         self.verification_Code()
         self.captura_dados()
+        self.button_Ir()
 
     #  BOTÃO ENTER DE CADASTRO DE LENTES
     def button_Ir(self):
