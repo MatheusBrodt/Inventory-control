@@ -220,7 +220,7 @@ class Funcs():
         self.connect_BD()
         self.cursor.execute(f"SELECT spherical, cylindrical, adicao, eye, material, laboratory, "
                             f"amount FROM stock WHERE spherical = '{self.sphe_CaptVis}' AND "
-                            f"cylindrical = '-{self.cylin_CaptVis}' AND adicao = '{self.add_CaptVis}'")
+                            f"cylindrical = '{self.cylin_CaptVis}' AND adicao = '{self.add_CaptVis}'")
         lista = self.cursor.fetchall()
 
         cont = 0
@@ -255,40 +255,49 @@ class Funcs():
         self.store_Reg = Label(self.frame_options, text='Loja:', font=self.fontepadrao, bg='#f0e68c')
 
         # ENTRYS
-        self.data_InicioEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.data_FimEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.store_RegEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.data_InicioEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.data_FimEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.store_RegEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.store_RegEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
 
         # LOCALIZAÇÃO DAS LABELS
         self.data_Inicio.place(relx=0.02, rely=0.03, relwidth=0.17, relheight=0.045)
         self.data_Fim.place(relx=0.41, rely=0.03, relwidth=0.16, relheight=0.045)
-        self.store_Reg.place(relx=0.78, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.store_Reg.place(relx=0.77, rely=0.03, relwidth=0.10, relheight=0.045)
 
         # LOCALIZAÇÃO DAS ENTRYS
         self.data_InicioEntry.place(relx=0.19, rely=0.03, relwidth=0.17, relheight=0.045)
         self.data_FimEntry.place(relx=0.56, rely=0.03, relwidth=0.17, relheight=0.045)
-        self.store_RegEntry.place(relx=0.87, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.store_RegEntry.place(relx=0.86, rely=0.03, relwidth=0.11, relheight=0.045)
 
     def label_VisEst(self):  # LABELS E ENTRYS DA FUNÇÃO DE VISUALIZAÇÃO DE LENTES
         # LABELS
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.sphe_Vis = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
-        self.cylin_Vis = Label(self.frame_options, text='Cilindro:', font=self.fontepadrao, bg='#f0e68c')
+        self.cylin_Vis = Label(self.frame_options, text='Cilindro: -', font=self.fontepadrao, bg='#f0e68c')
         self.add_Vis = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
 
         # ENTRYS
-        self.sphe_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.cylin_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.add_VisEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.sphe_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.sphe_VisEntry['values'] = ('0.00', '0.25', '0.50', '0.75', '1.00', '1.25', '1.50', '1.75', '2.00', '2.25',
+                                      '2.50', '2.75', '3.00', '3.25', '3.50', '3.75', '4.00', '-0.25', '-0.50', '-0.75',
+                                       '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25', '-2.50', '-2.75', '-3.00',
+                                        '-3.25', '-3.50', '-3.75', '-4.00')
+        self.cylin_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.cylin_VisEntry['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
+                                         '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.add_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.add_VisEntry['values'] = ('1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '3.25',
+                                       '3.50')
 
         # LOCALIZAÇÃO DAS LABELS
         self.sphe_Vis.place(relx=0.08, rely=0.10, relwidth=0.14, relheight=0.045)
-        self.cylin_Vis.place(relx=0.36, rely=0.10, relwidth=0.20, relheight=0.045)
+        self.cylin_Vis.place(relx=0.345, rely=0.10, relwidth=0.20, relheight=0.045)
         self.add_Vis.place(relx=0.70, rely=0.10, relwidth=0.10, relheight=0.045)
 
         # LOCALIZAÇÃO DAS ENTRYS
-        self.sphe_VisEntry.place(relx=0.21, rely=0.10, relwidth=0.10, relheight=0.045)
-        self.cylin_VisEntry.place(relx=0.515, rely=0.10, relwidth=0.10, relheight=0.045)
+        self.sphe_VisEntry.place(relx=0.21, rely=0.10, relwidth=0.12, relheight=0.045)
+        self.cylin_VisEntry.place(relx=0.515, rely=0.10, relwidth=0.12, relheight=0.045)
         self.add_VisEntry.place(relx=0.80, rely=0.10, relwidth=0.10, relheight=0.045)
 
     def listaFrame_Reg(self):
@@ -324,40 +333,51 @@ class Funcs():
     def label_LensZero(self):
         # LABELS
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
-        self.sphe_LensZero = Label(self.frame_options, text='Esférico: -', font=self.fontepadrao, bg='#f0e68c')
-        self.bar_LensZero = Label(self.frame_options, text='/ +', font=self.fontepadrao, bg='#f0e68c')
+        self.sphe_LensZero = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
+        self.bar_LensZero = Label(self.frame_options, text='/', font=self.fontepadrao, bg='#f0e68c')
         self.cylin_LensZero = Label(self.frame_options, text='Cilíndro:', font=self.fontepadrao, bg='#f0e68c')
         self.mat_LensZero = Label(self.frame_options, text='Material:', font=self.fontepadrao, bg='#f0e68c')
         self.lab_LensZero = Label(self.frame_options, text='Laborátorio:', font=self.fontepadrao, bg='#f0e68c')
 
         # ENTRYS
-        self.spheMax_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.spheMin_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.cylinEntry_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.matEntry_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.labEntry_LensZero = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.spheMax_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.spheMax_LensZero['values'] = ('-0.25', '-0.50', '-0.75','-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
+                                           '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.spheMin_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.spheMin_LensZero['values'] = ('0.25', '0.50', '0.75','1.00', '1.25', '1.50', '1.75', '2.00',
+                                           '2.25', '2.50', '2.75', '3.00', '3.25', '3.50', '3.75', '4.00')
+        self.cylinEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.cylinEntry_LensZero['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75',
+                                              '-2.00', '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75',
+                                              '-4.00')
+        self.matEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.matEntry_LensZero['values'] = ('CR/AR 1.50', 'CR/AR 1.56', 'CR/AR BLUE 1.56', 'POLI/AR 1.59',
+                                            'POLI/AR BLUE 1.59', 'CR/AR 1.56 Progressiva', 'Zeiss 1.50 Platinum',
+                                            'Zeiss 1.50 BlueProtect', 'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
+        self.labEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.labEntry_LensZero['values'] = ('Farol', 'Haytek', 'Zeiss')
 
         # LOCALIZAÇÃO DAS LABELS
-        self.sphe_LensZero.place(relx=0.18, rely=0.03, relwidth=0.14, relheight=0.045)
+        self.sphe_LensZero.place(relx=0.17, rely=0.03, relwidth=0.14, relheight=0.045)
         self.bar_LensZero.place(relx=0.43, rely=0.03, relwidth=0.04, relheight=0.045)
-        self.cylin_LensZero.place(relx=0.60, rely=0.03, relwidth=0.11, relheight=0.045)
+        self.cylin_LensZero.place(relx=0.61, rely=0.03, relwidth=0.11, relheight=0.045)
         self.mat_LensZero.place(relx=0.03, rely=0.13, relwidth=0.12, relheight=0.045)
         self.lab_LensZero.place(relx=0.50, rely=0.13, relwidth=0.16, relheight=0.045)
 
         # LOCALIZAÇÃO DAS ENTRYS
-        self.spheMax_LensZero.place(relx=0.32, rely=0.03, relwidth=0.10, relheight=0.045)
-        self.spheMin_LensZero.place(relx=0.475, rely=0.03, relwidth=0.10, relheight=0.045)
-        self.cylinEntry_LensZero.place(relx=0.72, rely=0.03, relwidth=0.10, relheight=0.045)
+        self.spheMax_LensZero.place(relx=0.305, rely=0.03, relwidth=0.12, relheight=0.045)
+        self.spheMin_LensZero.place(relx=0.475, rely=0.03, relwidth=0.12, relheight=0.045)
+        self.cylinEntry_LensZero.place(relx=0.73, rely=0.03, relwidth=0.12, relheight=0.045)
         self.matEntry_LensZero.place(relx=0.16, rely=0.13, relwidth=0.30, relheight=0.045)
         self.labEntry_LensZero.place(relx=0.67, rely=0.13, relwidth=0.30, relheight=0.045)
 
     def lensZero(self):
         self.connect_BD()
         self.cursor.execute(f"SELECT spherical, cylindrical, material, laboratory FROM stock "
-                        f"WHERE spherical > -{self.spheMax_LensZeroCapt} AND spherical < {self.spheMin_LensZeroCapt} "
-                         f"AND cylindrical > -{self.cylinEntry_LensZeroCapt} AND "
-                         f"material = '{self.matEntry_LensZeroCapt}' AND laboratory = '{self.labEntry_LensZeroCapt}' "
-                         f"AND amount = 0")
+                            f"WHERE spherical > {self.spheMax_LensZeroCapt} AND spherical < {self.spheMin_LensZeroCapt} "
+                            f"AND cylindrical > {self.cylinEntry_LensZeroCapt} AND "
+                            f"material = '{self.matEntry_LensZeroCapt}' AND laboratory = '{self.labEntry_LensZeroCapt}' "
+                            f"AND amount = 0")
 
         lista = self.cursor.fetchall()
         self.listaZero.delete(*self.listaZero.get_children())
@@ -447,13 +467,26 @@ class Funcs():
         self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
 
         #  ESTRADA DE DADOS
-        self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.sphe_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.cylin_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.lab_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.mat_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.add_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.eye_Entry = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.sphe_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.sphe_Entry['values'] = ('0.00', '0.25', '0.50', '0.75', '1.00', '1.25', '1.50', '1.75', '2.00', '2.25',
+                                     '2.50', '2.75', '3.00', '3.25', '3.50', '3.75', '4.00', '-0.25', '-0.50', '-0.75',
+                                     '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25', '-2.50', '-2.75', '-3.00',
+                                     '-3.25', '-3.50', '-3.75', '-4.00')
+        self.cylin_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.cylin_Entry['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
+                                      '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.lab_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.lab_Entry['values'] = ('Farol', 'Haytek', 'Zeiss')
+        self.mat_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.mat_Entry['values'] = ('CR/AR 1.50', 'CR/AR 1.56', 'CR/AR BLUE 1.56', 'POLI/AR 1.59', 'POLI/AR BLUE 1.59',
+                                    'CR/AR 1.56 Progressiva', 'Zeiss 1.50 Platinum', 'Zeiss 1.50 BlueProtect',
+                                    'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
+        self.add_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.add_Entry['values'] = ('1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '3.25',
+                                    '3.50')
+        self.eye_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.eye_Entry['values'] = ('D', 'E')
 
         #  LOCALIZAÇÃO DAS LABELS
         self.codBarras.place(relx=0.010, rely=0.03, relwidth=0.20, relheight=0.045)
@@ -639,6 +672,7 @@ class Interface(Funcs):
         print("Botão de cadastro clicado!".title())
         self.label_and_entry()
         self.button_Ir()
+        self.clear()
     #  BOTÃO CADASTRAR
     def button_Cadastrar(self):
         self.CadastrarLente = Button(self.frame_buttons, text="Cadastrar", command=self.option_RegisterLens,
@@ -694,18 +728,20 @@ class Interface(Funcs):
         self.seq_Exit = Label(self.frame_options, text='Sequência:', font=self.fontepadrao, bg='#f0e68c')
         self.reason_Exit = Label(self.frame_options, text='Motivo:', font=self.fontepadrao, bg='#f0e68c')
         # ENTRYS
-        self.codBarrasEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.storeEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.seqEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
-        self.reasonEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='#eee8aa')
+        self.codBarrasEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.storeEntry_Exit = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.storeEntry_Exit['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.seqEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.reasonEntry_Exit = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.reasonEntry_Exit['values'] = ('Montagem', 'Garantia', 'Quebra')
         # PLACES ENTRYS E LABELS
-        self.codBarrasEntry_Exit.place(relx=0.245, rely=0.03, relwidth=0.25, relheight=0.045)
-        self.storeEntry_Exit.place(relx=0.595, rely=0.03, relwidth=0.08, relheight=0.045)
+        self.codBarrasEntry_Exit.place(relx=0.245, rely=0.03, relwidth=0.23, relheight=0.045)
+        self.storeEntry_Exit.place(relx=0.575, rely=0.03, relwidth=0.11, relheight=0.045)
         self.seqEntry_Exit.place(relx=0.86, rely=0.03, relwidth=0.11, relheight=0.045)
         self.reasonEntry_Exit.place(relx=0.45, rely=0.11, relwidth=0.20, relheight=0.045)
 
         self.codBarras.place(relx=0.02, rely=0.03, relwidth=0.22, relheight=0.045)
-        self.store_Exit.place(relx=0.51, rely=0.03, relwidth=0.08, relheight=0.045)
+        self.store_Exit.place(relx=0.49, rely=0.03, relwidth=0.08, relheight=0.045)
         self.seq_Exit.place(relx=0.70, rely=0.03, relwidth=0.14, relheight=0.045)
         self.reason_Exit.place(relx=0.34, rely=0.11, relwidth=0.10, relheight=0.045)
 
