@@ -24,7 +24,9 @@ class Funcs():
             self.warning()
             print('\033[31mErro ao conectar no BD!\033[m')
 
-    def clear(self):
+# ==========================//====================/LIMPEZA DE ENTRYS/====================//=============================
+
+    def clear(self): # LIMPA AS ENTRYS DO REGISTRO DE LENTES
         self.codigo_Capt = self.codBarrasEntry.delete(0, END)
         self.sphe_Capt = self.sphe_Entry.delete(0, END)
         self.cylin_Capt = self.cylin_Entry.delete(0, END)
@@ -33,18 +35,26 @@ class Funcs():
         self.lab = self.lab_Entry.delete(0, END)
         self.mat_Capt = self.mat_Entry.delete(0, END)
 
-    def clear_Exit(self):
+    def clear_Exit(self):  # LIMPA AS ENTRYS DA REMOÇÃO DE LENTES
         self.codRemove_Capt = self.codBarrasEntry_Exit.delete(0, END)
         self.store_Capt = self.storeEntry_Exit.delete(0, END)
         self.seq_Capt = self.seqEntry_Exit.delete(0, END)
         self.reason_Capt = self.reasonEntry_Exit.delete(0, END)
 
-    def clear_dadosVis(self):
+    def clear_dadosVis(self):  # LIMPA OS DADOS DA VISUALIZAÇÃO DE LENTES
         self.spheClear_CaptVis = self.sphe_VisEntry.delete(0,END)
         self.cylinClear_CaptVis = self.cylin_VisEntry.delete(0,END)
         self.addClear_CaptVis = self.add_VisEntry.delete(0, END)
 
-    def captura_dados(self):
+    def clear_dadosRegServiço(self):  # LIMPA OS DADOS DO REGISTRO DE SERVIÇOS
+        self.store_RegServiceEntryRem = self.store_RegServiceEntry.delete(0,END)
+        self.seq_RegServiceEntryRem = self.store_RegServiceEntry.delete(0,END)
+        self.prevDay_RegServiceEntryRem = self.prevDay_RegServiceEntry.delete(0,END)
+        self.prevMonth_RegServiceEntryRem = self.prevMonth_RegServiceEntry.delete(0,END)
+
+# ==========================//====================/CAPTURA DE DADOS/====================//=============================
+
+    def captura_dados(self):  # CAPTURA DADOS DAS ENTRYS DE CADASTRO DE LENTES
         self.codigo_Capt = self.codBarrasEntry.get()
         self.sphe_Capt = self.sphe_Entry.get()
         self.cylin_Capt = self.cylin_Entry.get()
@@ -53,25 +63,25 @@ class Funcs():
         self.lab_Capt = self.lab_Entry.get()
         self.mat_Capt = self.mat_Entry.get()
 
-    def captura_dadosRemove(self):
+    def captura_dadosRemove(self):  # CAPTURA DE DADOS DAS ENTRYS DE REMOVER LENTES
         self.codRemove_Capt = self.codBarrasEntry_Exit.get()
         self.store_Capt = self.storeEntry_Exit.get()
         self.seq_Capt = self.seqEntry_Exit.get()
         self.reason_Capt = self.reasonEntry_Exit.get()
 
-    def captura_dadosVis(self):
+    def captura_dadosVis(self):  # CAPTURA DE DADOS DAS ENTRYS DE VISUALIZAR LENTES
         self.sphe_CaptVis = self.sphe_VisEntry.get()
         self.cylin_CaptVis = self.cylin_VisEntry.get()
         self.add_CaptVis = self.add_VisEntry.get()
 
-    def captura_dadosLensZero(self):
+    def captura_dadosLensZero(self):  # CAPTURA DADOS DAS ENTRYS DE VISUALIZAR LENTES ZERADAS
         self.spheMax_LensZeroCapt = self.spheMax_LensZero.get()
         self.spheMin_LensZeroCapt = self.spheMin_LensZero.get()
         self.cylinEntry_LensZeroCapt = self.cylinEntry_LensZero.get()
         self.matEntry_LensZeroCapt =  self.matEntry_LensZero.get()
         self.labEntry_LensZeroCapt = self.labEntry_LensZero.get()
 
-    def captura_dadosRegSaida(self):
+    def captura_dadosRegSaida(self):  # CAPTURA DE DADOS DAS ENTRYS DE REGISTRAR SAÍDA DE LENTES
         self.data_InicioEntryCapt = self.data_InicioEntry.get()
         self.data_FimEntryCapt = self.data_FimEntry.get()
         self.store_RegEntryCapt = self.store_RegEntry.get()
@@ -81,6 +91,30 @@ class Funcs():
         else:
             self.text_warning = ''
             self.warning()
+
+    def captura_dadosRegServico(self):  # CAPTURA OS DADOS DAS ENTRYS DO REGISTRO DE SERVIÇOS
+        verif = ()
+        self.store_RegServiceEntryCapt = self.store_RegServiceEntry.get()
+        self.seq_RegServiceEntryCapt = self.seq_RegServiceEntry.get()
+        self.sit_RegServiceEntryCapt = self.sit_RegServiceEntry.get()
+        self.prevDay_RegServiceEntryCapt = self.prevDay_RegServiceEntry.get()
+        self.prevMonth_RegServiceEntryCapt = self.prevMonth_RegServiceEntry.get()
+        self.prevYear_RegServiceEntryCapt = self.prevYear_RegServiceEntry.get()
+
+        verif.append(self.store_RegServiceEntryCapt)
+        verif.append(self.seq_RegServiceEntryCapt)
+        verif.append(self.sit_RegServiceEntryCapt)
+        verif.append(self.prevDay_RegServiceEntryCapt)
+        verif.append(self.prevMonth_RegServiceEntryCapt)
+        verif.append(self.prevYear_RegServiceEntryCapt)
+        if '' in verif:
+            self.text_warning = 'PREENCHA TODOS OS CAMPOS'
+            self.warning()
+        else:
+            self.text_warning = 'SERVIÇO ADICONADO'
+            self.warning()
+
+# ==========================//===========================//============================//==============================
 
     def verification_Int(self):
         self.captura_dados()
@@ -274,15 +308,15 @@ class Funcs():
         # LABELS
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.sphe_Vis = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
-        self.cylin_Vis = Label(self.frame_options, text='Cilindro: -', font=self.fontepadrao, bg='#f0e68c')
+        self.cylin_Vis = Label(self.frame_options, text='Cilindro:', font=self.fontepadrao, bg='#f0e68c')
         self.add_Vis = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
 
         # ENTRYS
         self.sphe_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.sphe_VisEntry['values'] = ('0.00', '0.25', '0.50', '0.75', '1.00', '1.25', '1.50', '1.75', '2.00', '2.25',
-                                      '2.50', '2.75', '3.00', '3.25', '3.50', '3.75', '4.00', '-0.25', '-0.50', '-0.75',
-                                       '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25', '-2.50', '-2.75', '-3.00',
-                                        '-3.25', '-3.50', '-3.75', '-4.00')
+        self.sphe_VisEntry['values'] = ('0.00', '+0.25', '+0.50', '+0.75', '+1.00', '+1.25', '+1.50', '+1.75', '+2.00',
+                                        '+2.25', '+2.50', '+2.75', '+3.00', '+3.25', '+3.50', '+3.75', '+4.00',
+                                        '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25',
+                                        '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
         self.cylin_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.cylin_VisEntry['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
                                          '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
@@ -292,7 +326,7 @@ class Funcs():
 
         # LOCALIZAÇÃO DAS LABELS
         self.sphe_Vis.place(relx=0.08, rely=0.10, relwidth=0.14, relheight=0.045)
-        self.cylin_Vis.place(relx=0.345, rely=0.10, relwidth=0.20, relheight=0.045)
+        self.cylin_Vis.place(relx=0.358, rely=0.10, relwidth=0.20, relheight=0.045)
         self.add_Vis.place(relx=0.70, rely=0.10, relwidth=0.10, relheight=0.045)
 
         # LOCALIZAÇÃO DAS ENTRYS
@@ -344,8 +378,8 @@ class Funcs():
         self.spheMax_LensZero['values'] = ('-0.25', '-0.50', '-0.75','-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
                                            '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
         self.spheMin_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.spheMin_LensZero['values'] = ('0.25', '0.50', '0.75','1.00', '1.25', '1.50', '1.75', '2.00',
-                                           '2.25', '2.50', '2.75', '3.00', '3.25', '3.50', '3.75', '4.00')
+        self.spheMin_LensZero['values'] = ('0.00', '+0.25', '+0.50', '+0.75','+1.00', '+1.25', '+1.50', '+1.75', '+2.00',
+                                           '+2.25', '+2.50', '+2.75', '+3.00', '+3.25', '+3.50', '+3.75', '+4.00')
         self.cylinEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.cylinEntry_LensZero['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75',
                                               '-2.00', '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75',
@@ -374,10 +408,10 @@ class Funcs():
     def lensZero(self):
         self.connect_BD()
         self.cursor.execute(f"SELECT spherical, cylindrical, material, laboratory FROM stock "
-                            f"WHERE spherical > {self.spheMax_LensZeroCapt} AND spherical < {self.spheMin_LensZeroCapt} "
-                            f"AND cylindrical > {self.cylinEntry_LensZeroCapt} AND "
+                            f"WHERE spherical BETWEEN {self.spheMax_LensZeroCapt} AND {self.spheMin_LensZeroCapt} "
+                            f"AND cylindrical BETWEEN {self.cylinEntry_LensZeroCapt} AND 0 AND "
                             f"material = '{self.matEntry_LensZeroCapt}' AND laboratory = '{self.labEntry_LensZeroCapt}' "
-                            f"AND amount = 0")
+                            f"AND amount = 0 ORDER BY spherical DESC")
 
         lista = self.cursor.fetchall()
         self.listaZero.delete(*self.listaZero.get_children())
@@ -410,7 +444,8 @@ class Funcs():
             self.connect_BD()
             self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
             result = self.cursor.fetchone()
-            if result is not None:
+            print(result[0])
+            if result is not None and result[0] > 0:
                 self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
                 self.cursor.execute(f"INSERT INTO lens VALUES "
                                     f"('', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
@@ -446,6 +481,55 @@ class Funcs():
 
         self.lista_Exit.place(relx=0.025, rely=0.18, relwidth=0.95, relheight=0.65)
 
+    def label_RegService(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        # LABELS
+        self.store_RegService = Label(self.frame_options, text='Loja:', font=self.fontepadrao, bg='#f0e68c')
+        self.seq_RegService = Label(self.frame_options, text='Sequência:', font=self.fontepadrao, bg='#f0e68c')
+        self.sit_RegService = Label(self.frame_options, text='Situação:', font=self.fontepadrao, bg='#f0e68c')
+        self.prev_RegService = Label(self.frame_options, text='Previsão:', font=self.fontepadrao, bg='#f0e68c')
+        self.prevDay_RegService = Label(self.frame_options, text='Dia', font=self.fontepadrao, bg='#f0e68c')
+        self.prevMonth_RegService = Label(self.frame_options, text='Mês', font=self.fontepadrao, bg='#f0e68c')
+        self.prevYear_RegService = Label(self.frame_options, text='Ano', font=self.fontepadrao, bg='#f0e68c')
+        # ENTRYS
+        self.store_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.store_RegServiceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+
+        self.seq_RegServiceEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.sit_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.sit_RegServiceEntry['values'] = ('Aguardando', 'Montagem', 'Finalizado', 'Retrabalho')
+        self.sit_RegServiceEntry.current(1)
+        self.prevDay_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.prevDay_RegServiceEntry['values'] = ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
+                                                  '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24',
+                                                  '25', '26', '27', '28', '29', '30', '31')
+        self.barra_of_date1 = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
+        self.prevMonth_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.prevMonth_RegServiceEntry['values'] = ('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho',
+                                                    'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro')
+        self.barra_of_date2 = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
+        self.prevYear_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.prevYear_RegServiceEntry['values'] = ('2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027',
+                                                   '2028', '2029', '2030')
+        self.prevYear_RegServiceEntry.current(1)
+
+        #  LOCALIZAÇÃO DAS LABELS
+        self.store_RegService.place(relx=0.06, rely=0.03, relwidth=0.07, relheight=0.045)
+        self.seq_RegService.place(relx=0.06, rely=0.13, relwidth=0.15, relheight=0.045)
+        self.sit_RegService.place(relx=0.50, rely=0.03, relwidth=0.12, relheight=0.045)
+        self.prev_RegService.place(relx=0.45, rely=0.13, relwidth=0.12, relheight=0.045)
+        self.prevDay_RegService.place(relx=0.57, rely=0.09, relwidth=0.10, relheight=0.045)
+        self.prevMonth_RegService.place(relx=0.705, rely=0.09, relwidth=0.10, relheight=0.045)
+        self.prevYear_RegService.place(relx=0.84, rely=0.09, relwidth=0.10, relheight=0.045)
+
+        #  LOCALIZAÇÃO DAS ENTRYS
+        self.store_RegServiceEntry.place(relx=0.135, rely=0.03, relwidth=0.12, relheight=0.045)
+        self.seq_RegServiceEntry.place(relx=0.21, rely=0.13, relwidth=0.11, relheight=0.045)
+        self.sit_RegServiceEntry.place(relx=0.63, rely=0.03, relwidth=0.20, relheight=0.045)
+        self.prevDay_RegServiceEntry.place(relx=0.58, rely=0.13, relwidth=0.08, relheight=0.045)
+        self.prevMonth_RegServiceEntry.place(relx=0.663, rely=0.13, relwidth=0.175, relheight=0.045)
+        self.prevYear_RegServiceEntry.place(relx=0.84, rely=0.13, relwidth=0.10, relheight=0.045)
+
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
         self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
@@ -469,10 +553,10 @@ class Funcs():
         #  ESTRADA DE DADOS
         self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.sphe_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.sphe_Entry['values'] = ('0.00', '0.25', '0.50', '0.75', '1.00', '1.25', '1.50', '1.75', '2.00', '2.25',
-                                     '2.50', '2.75', '3.00', '3.25', '3.50', '3.75', '4.00', '-0.25', '-0.50', '-0.75',
-                                     '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25', '-2.50', '-2.75', '-3.00',
-                                     '-3.25', '-3.50', '-3.75', '-4.00')
+        self.sphe_Entry['values'] = ('0.00', '+0.25', '+0.50', '+0.75', '+1.00', '+1.25', '+1.50', '+1.75', '+2.00',
+                                        '+2.25', '+2.50', '+2.75', '+3.00', '+3.25', '+3.50', '+3.75', '+4.00',
+                                        '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25',
+                                        '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
         self.cylin_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.cylin_Entry['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
                                       '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
@@ -545,6 +629,7 @@ class Interface(Funcs):
         self.button_LensZero()
         self.button_Retirar()
         self.button_RegSaida()
+        self.button_RegService()
         self.button_Sair()
         self.entry_Login()
         self.entry_Senha()
@@ -768,6 +853,19 @@ class Interface(Funcs):
                                command=self.reg_output)
         self.RegSaida["font"] = ("Verdana", 10, "italic", "bold")
         self.RegSaida.place(relx=0.05, rely=0.31, relwidth=0.90, relheight=0.10)
+    #<<<<<
+
+    #>>>>>
+    def option_buttonRegService(self):
+        print('Botão Registrar Serviços clicado!')
+        self.options()
+        self.label_RegService()
+
+    def button_RegService(self):
+        self.regService = Button(self.frame_buttons, text='Registrar\nServiços', bg='#c0c0c0', fg='black',
+                                 command=self.option_buttonRegService)
+        self.regService["font"] = ("Verdana", 10, "italic", "bold")
+        self.regService.place(relx=0.05, rely=0.42, relwidth=0.90, relheight=0.10)
     #<<<<<
 
     #  BOTÃO DE SAIR
