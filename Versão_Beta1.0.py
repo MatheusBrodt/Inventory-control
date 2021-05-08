@@ -44,7 +44,6 @@ class Funcs():
         self.codRemove_Capt = self.codBarrasEntry_Exit.delete(0, END)
         self.store_Capt = self.storeEntry_Exit.delete(0, END)
         self.seq_Capt = self.seqEntry_Exit.delete(0, END)
-        self.reason_Capt = self.reasonEntry_Exit.delete(0, END)
 
     def clear_dadosVis(self):  # LIMPA OS DADOS DA VISUALIZAÇÃO DE LENTES
         self.spheClear_CaptVis = self.sphe_VisEntry.delete(0,END)
@@ -63,7 +62,7 @@ class Funcs():
         self.seq_serviceEntryRem = self.seq_serviceEntry.delete(0, END)
         self.type_serviceEntryRem = self.type_serviceEntry.delete(0, END)
 
-    # ==========================//====================/CAPTURA DE DADOS/====================//=============================
+# ==========================//====================/CAPTURA DE DADOS/====================//=============================
 
     def captura_dados(self):  # CAPTURA DADOS DAS ENTRYS DE CADASTRO DE LENTES
         self.codigo_Capt = self.codBarrasEntry.get()
@@ -127,16 +126,16 @@ class Funcs():
             self.warning()
             self.verif = True
 
-    def list_Service(self):  # CAPTURA AS ENTRYS DA LISTA DE SERVIÇO
+    def captura_ListService(self):  # CAPTURA AS ENTRYS DA LISTA DE SERVIÇO
         verif = []
         self.store_serviceEntryCapt = self.store_serviceEntry.get()
         self.seq_serviceEntryCapt = self.seq_serviceEntry.get()
         self.type_serviceEntryCapt = self.type_serviceEntry.get()
-        verif.append(self.store_serviceEntryCapt, self.seq_serviceEntryCapt, self.type_serviceEntryCapt)
-        if '' in verif:
+        verif.append(self.store_serviceEntryCapt)
+        verif.append(self.seq_serviceEntryCapt)
+        verif.append(self.type_serviceEntryCapt)
+        if '' not in verif:
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
-        else:
-            self.text_warning = 'SERVIÇO ADICONADO'
             self.warning()
 
 # ==========================//=====================/MANIPULAÇÃO DE DADOS/==================//===========================
@@ -373,6 +372,38 @@ class Funcs():
                 self.warning()
             self.conn.close()
 
+    def addServiceList(self):
+        # IDENTIFICAR SE EXISTE SERVIÇO À SER MODIFICADO O STATUS
+        self.captura_ListService()
+        type_lens = str(self.type_serviceEntryCapt).upper()
+        if type_lens == 'VS':
+            type_lens = 'Visão Simples'
+        elif type_lens == 'M':
+            type_lens = 'Multifocal'
+        elif type_lens == 'B':
+            type_lens = 'Bifocal'
+        self.connect_BD()
+        self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND "
+                            f"sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
+        verif = self.cursor.fetchone()
+        if verif is None:
+            self.text_warning = 'SERVIÇO NÃO CADASTRADO'
+            self.warning()
+        else:
+            self.cursor.execute(f"UPDATE services SET data = '{self.current_date}', situation = 'Finalizado' WHERE "
+                                f"store = '{self.store_serviceEntryCapt}' AND sequencia = "
+                                f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'" )
+            self.conn.commit()
+            self.cursor.execute(f"SELECT store, sequencia, tipo FROM services WHERE data = '{self.current_date}' "
+                                f"AND store = '{self.store_serviceEntryCapt}' AND sequencia = "
+                                f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}' AND "
+                                f"situation = 'Finalizado'") # PAREI AQUI, INSERIR NA LISTA
+            lista = self.cursor.fetchall()
+            for val in lista:
+                self.listSearchServ.insert('', END, values=(val))
+            self.conn.close()
+            self.clear_listService()
+
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
         self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
@@ -519,6 +550,7 @@ class Funcs():
         self.seqEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.reasonEntry_Exit = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.reasonEntry_Exit['values'] = ('Montagem', 'Garantia', 'Quebra')
+        self.reasonEntry_Exit.current(0)
         # PLACES ENTRYS E LABELS
         self.codBarrasEntry_Exit.place(relx=0.245, rely=0.03, relwidth=0.23, relheight=0.045)
         self.storeEntry_Exit.place(relx=0.575, rely=0.03, relwidth=0.11, relheight=0.045)
@@ -572,7 +604,7 @@ class Funcs():
         self.tipo_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.tipo_RegServiceEntry['values'] = ('Visão Simples', 'Multifocal', 'Bifocal')
         self.sit_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.sit_RegServiceEntry['values'] = ('Aguardando', 'Montagem', 'Finalizado', 'Retrabalho')
+        self.sit_RegServiceEntry['values'] = ('Digitação', 'Aguardando', 'Montagem', 'Finalizado', 'Retrabalho')
         self.sit_RegServiceEntry.current(1)
         self.prevDay_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.prevDay_RegServiceEntry['values'] = ('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11',
@@ -622,12 +654,12 @@ class Funcs():
 
         # LOCALIZAÇÃO DAS LABELS
         self.store_service.place(relx=0.03, rely=0.02, relwidth=0.08, relheight=0.035)
-        self.seq_service.place(relx=0.38, rely=0.02, relwidth=0.16, relheight=0.035)
+        self.seq_service.place(relx=0.30, rely=0.02, relwidth=0.16, relheight=0.035)
         self.type_service.place(relx=0.80, rely=0.02, relwidth=0.08, relheight=0.035)
 
         # LOCALIZAÇÃO DAS ENTRYS
         self.store_serviceEntry.place(relx=0.11, rely=0.02, relwidth=0.12, relheight=0.035)
-        self.seq_serviceEntry.place(relx=0.54, rely=0.02, relwidth=0.12, relheight=0.035)
+        self.seq_serviceEntry.place(relx=0.46, rely=0.02, relwidth=0.28, relheight=0.035)
         self.type_serviceEntry.place(relx=0.88, rely=0.02, relwidth=0.08, relheight=0.035)
 
 # ==========================//===========================/LISTAS/========================//=============================
@@ -665,7 +697,7 @@ class Funcs():
     def lista_FrameExit(self):
         self.lista_Exit = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4'))
 
-        self.lista_Exit.heading('#0', text='ID')
+        self.lista_Exit.heading('#0')
         self.lista_Exit.heading('col1', text='Cod. Barras')
         self.lista_Exit.heading('col2', text='Loja')
         self.lista_Exit.heading('col3', text='Sequência')
@@ -702,7 +734,7 @@ class Funcs():
         self.listaCli = ttk.Treeview(self.frame_options, height=3, columns=( 'col1', 'col2', 'col3', 'col4',
                                                                              'col5', 'col6', 'col7'))
 
-        self.listaCli.heading('#0', text='ID')
+        self.listaCli.heading('#0')
         self.listaCli.heading('col1', text='Esférico')
         self.listaCli.heading('col2', text='Cilíndro')
         self.listaCli.heading('col3', text='Adição')
@@ -754,14 +786,14 @@ class Funcs():
         self.listSearchServ.heading('col4', text='Garantia')
 
         self.listSearchServ.column('#0', width=0)
-        self.listSearchServ.column('col1', width=70)
-        self.listSearchServ.column('col2', width=60)
-        self.listSearchServ.column('col3', width=70)
+        self.listSearchServ.column('col1', width=50)
+        self.listSearchServ.column('col2', width=100)
+        self.listSearchServ.column('col3', width=90)
         self.listSearchServ.column('col4', width=50)
 
-        self.listSearchServ.place(relx=0.025, rely=0.07, relwidth=0.948, relheight=0.80)
+        self.listSearchServ.place(relx=0.025, rely=0.07, relwidth=0.948, relheight=0.87)
 
-# =============================//======================FRONT END/======================//===============================
+# =============================//=======================/FRONT END/=======================//============================
 class Interface(Funcs):
 # ==========================//========================/INICIALIZAÇÃO/========================//=========================
     def __init__(self):
@@ -770,6 +802,7 @@ class Interface(Funcs):
         self.buttons()
         self.titulo()
         self.informations()
+        self.options()
         self.services()
         self.button_Cadastrar()
         self.button_VisEstoque()
@@ -783,6 +816,8 @@ class Interface(Funcs):
         self.date_hour()
         self.label_services()
         self.lista_searchService()
+        self.button_Selecionar()
+        self.button_Obs()
         root.mainloop()
 # ==========================//===========================/FRAMES/========================//=============================
 
@@ -918,6 +953,18 @@ class Interface(Funcs):
         self.recording_RegService()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # BOTÃO ENTER DE ADICONAR SERVIÇOS
+    def button_Selecionar(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.AddService = Button(self.frame_services, text='Adiconar', font=self.fontepadrao, bg='#f0e68c',
+                                 command=self.option_AddService)
+        self.AddService.place(relx=0.425, rely=0.947, relwidth=0.15, relheight=0.04)
+    # FUNÇÃO DO BOTÃO DE ADICIONAR SERVIÇOS
+    def option_AddService(self):
+        print("Botão 'ENTER/ADICONAR SERVIÇOS' clicado!")
+        self.addServiceList()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # =========================//============================/BOTÕES/===========================//==========================
 
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1012,6 +1059,17 @@ class Interface(Funcs):
         self.button_RegServiceEnter()
         self.label_RegService()
         self.lista_RegService()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    def button_Obs(self):
+        self.buttonObs = Button(self.frame_buttons, text='Registrar\nObservações', bg='#c0c0c0', fg='black',
+                          command=self.option_buttonObs)
+        self.buttonObs["font"] = ("Verdana", 10, "italic", "bold")
+        self.buttonObs.place(relx=0.05, rely=0.53, relwidth=0.90, relheight=0.10)
+    def option_buttonObs(self):
+        print('Botão Registra Observações clicado!')
+        self.options()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
