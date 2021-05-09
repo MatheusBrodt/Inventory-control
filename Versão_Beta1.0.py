@@ -173,7 +173,6 @@ class Funcs():
             if validate.isalpha() or validate.isspace():
                 self.text_warning = 'DADOS INVÁLIDOS'
                 self.warning()
-                #self.clear() CRIAR FUNÇÃO CLEAR DA SAÍDA DE LENTES
                 print('\033[31mENTRADA DE DADOS INVALIDA NA FUNÇÃO "VERIFICATON_INT"\033[m')
                 return False
             else:
@@ -359,7 +358,6 @@ class Funcs():
             previsao = f"{var[2]}-{month[var[1]]}-{var[0]}"
             data_prev = datetime.strptime(previsao, '%Y-%m-%d').date()
             data_today = self.date
-        # >>>>> ARRUMAR FUNÇÃO DA DATA
             self.connect_BD()
             if data_prev > data_today:
                 self.cursor.execute(f"INSERT INTO services VALUES "
@@ -406,7 +404,7 @@ class Funcs():
             self.cursor.execute(f"SELECT store, sequencia, tipo FROM services WHERE data = '{self.current_date}' "
                                 f"AND store = '{self.store_serviceEntryCapt}' AND sequencia = "
                                 f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}' AND "
-                                f"situation = 'Finalizado'") # PAREI AQUI, INSERIR NA LISTA
+                                f"situation = 'Finalizado'")
             lista = self.cursor.fetchall()
             for val in lista:
                 self.listSearchServ.insert('', END, values=(val))
@@ -446,7 +444,6 @@ class Funcs():
         self.mat = Label(self.frame_options, text='Material:', font=self.fontepadrao, bg='#f0e68c')
         self.add = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
         self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
-
         #  ESTRADA DE DADOS
         self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.sphe_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
@@ -468,7 +465,6 @@ class Funcs():
                                     '3.50')
         self.eye_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.eye_Entry['values'] = ('D', 'E')
-
         #  LOCALIZAÇÃO DAS LABELS
         self.codBarras.place(relx=0.010, rely=0.03, relwidth=0.20, relheight=0.045)
         self.sphe_degree.place(relx=0.44, rely=0.03, relwidth=0.17, relheight=0.045)
@@ -477,7 +473,6 @@ class Funcs():
         self.mat.place(relx=0.50, rely=0.11, relwidth=0.20, relheight=0.045)
         self.add.place(relx=0.19, rely=0.19, relwidth=0.10, relheight=0.045)
         self.eye.place(relx=0.625, rely=0.19, relwidth=0.15, relheight=0.045)
-
         #  LOCALIZAÇÃO DAS ENTRY
         self.codBarrasEntry.place(relx=0.22, rely=0.03, relwidth=0.23, relheight=0.045)
         self.sphe_Entry.place(relx=0.59, rely=0.03, relwidth=0.12, relheight=0.045)
@@ -493,7 +488,6 @@ class Funcs():
         self.sphe_Vis = Label(self.frame_options, text='Esférico:', font=self.fontepadrao, bg='#f0e68c')
         self.cylin_Vis = Label(self.frame_options, text='Cilindro:', font=self.fontepadrao, bg='#f0e68c')
         self.add_Vis = Label(self.frame_options, text='Adição:', font=self.fontepadrao, bg='#f0e68c')
-
         # ENTRYS
         self.sphe_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.sphe_VisEntry['values'] = ('0.00', '+0.25', '+0.50', '+0.75', '+1.00', '+1.25', '+1.50', '+1.75', '+2.00',
@@ -506,12 +500,10 @@ class Funcs():
         self.add_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.add_VisEntry['values'] = ('1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '3.25',
                                        '3.50')
-
         # LOCALIZAÇÃO DAS LABELS
         self.sphe_Vis.place(relx=0.08, rely=0.10, relwidth=0.14, relheight=0.045)
         self.cylin_Vis.place(relx=0.358, rely=0.10, relwidth=0.20, relheight=0.045)
         self.add_Vis.place(relx=0.70, rely=0.10, relwidth=0.10, relheight=0.045)
-
         # LOCALIZAÇÃO DAS ENTRYS
         self.sphe_VisEntry.place(relx=0.21, rely=0.10, relwidth=0.12, relheight=0.045)
         self.cylin_VisEntry.place(relx=0.515, rely=0.10, relwidth=0.12, relheight=0.045)
@@ -525,7 +517,6 @@ class Funcs():
         self.cylin_LensZero = Label(self.frame_options, text='Cilíndro:', font=self.fontepadrao, bg='#f0e68c')
         self.mat_LensZero = Label(self.frame_options, text='Material:', font=self.fontepadrao, bg='#f0e68c')
         self.lab_LensZero = Label(self.frame_options, text='Laborátorio:', font=self.fontepadrao, bg='#f0e68c')
-
         # ENTRYS
         self.spheMax_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.spheMax_LensZero['values'] = ('-0.25', '-0.50', '-0.75','-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
@@ -543,14 +534,12 @@ class Funcs():
                                             'Zeiss 1.50 BlueProtect', 'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
         self.labEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.labEntry_LensZero['values'] = ('Farol', 'Haytek', 'Zeiss')
-
         # LOCALIZAÇÃO DAS LABELS
         self.sphe_LensZero.place(relx=0.17, rely=0.03, relwidth=0.14, relheight=0.045)
         self.bar_LensZero.place(relx=0.43, rely=0.03, relwidth=0.04, relheight=0.045)
         self.cylin_LensZero.place(relx=0.61, rely=0.03, relwidth=0.11, relheight=0.045)
         self.mat_LensZero.place(relx=0.03, rely=0.13, relwidth=0.12, relheight=0.045)
         self.lab_LensZero.place(relx=0.50, rely=0.13, relwidth=0.16, relheight=0.045)
-
         # LOCALIZAÇÃO DAS ENTRYS
         self.spheMax_LensZero.place(relx=0.305, rely=0.03, relwidth=0.12, relheight=0.045)
         self.spheMin_LensZero.place(relx=0.475, rely=0.03, relwidth=0.12, relheight=0.045)
@@ -590,18 +579,15 @@ class Funcs():
         self.data_Inicio = Label(self.frame_options, text='Data Início:', font=self.fontepadrao, bg='#f0e68c')
         self.data_Fim = Label(self.frame_options, text='Data Fim:', font=self.fontepadrao, bg='#f0e68c')
         self.store_Reg = Label(self.frame_options, text='Loja:', font=self.fontepadrao, bg='#f0e68c')
-
         # ENTRYS
         self.data_InicioEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.data_FimEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.store_RegEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.store_RegEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
-
         # LOCALIZAÇÃO DAS LABELS
         self.data_Inicio.place(relx=0.02, rely=0.03, relwidth=0.17, relheight=0.045)
         self.data_Fim.place(relx=0.41, rely=0.03, relwidth=0.16, relheight=0.045)
         self.store_Reg.place(relx=0.77, rely=0.03, relwidth=0.10, relheight=0.045)
-
         # LOCALIZAÇÃO DAS ENTRYS
         self.data_InicioEntry.place(relx=0.19, rely=0.03, relwidth=0.17, relheight=0.045)
         self.data_FimEntry.place(relx=0.56, rely=0.03, relwidth=0.17, relheight=0.045)
@@ -621,7 +607,6 @@ class Funcs():
         # ENTRYS
         self.store_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.store_RegServiceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
-
         self.seq_RegServiceEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.tipo_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.tipo_RegServiceEntry['values'] = ('Visão Simples', 'Multifocal', 'Bifocal')
@@ -641,7 +626,6 @@ class Funcs():
         self.prevYear_RegServiceEntry['values'] = ('2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027',
                                                    '2028', '2029', '2030')
         self.prevYear_RegServiceEntry.current(1)
-
         #  LOCALIZAÇÃO DAS LABELS
         self.store_RegService.place(relx=0.06, rely=0.03, relwidth=0.07, relheight=0.045)
         self.seq_RegService.place(relx=0.33, rely=0.03, relwidth=0.15, relheight=0.045)
@@ -651,7 +635,6 @@ class Funcs():
         self.prevDay_RegService.place(relx=0.57, rely=0.09, relwidth=0.10, relheight=0.045)
         self.prevMonth_RegService.place(relx=0.705, rely=0.09, relwidth=0.10, relheight=0.045)
         self.prevYear_RegService.place(relx=0.84, rely=0.09, relwidth=0.10, relheight=0.045)
-
         #  LOCALIZAÇÃO DAS ENTRYS
         self.store_RegServiceEntry.place(relx=0.135, rely=0.03, relwidth=0.12, relheight=0.045)
         self.seq_RegServiceEntry.place(relx=0.48, rely=0.03, relwidth=0.11, relheight=0.045)
@@ -702,7 +685,6 @@ class Funcs():
     def listaFrame_Reg(self):
         self.listaReg = ttk.Treeview(self.frame_options, height=6, columns=('col1', 'col2', 'col3', 'col4', 'col5',
                                                                             'col6', 'col7', 'col8', 'col9', 'col10'))
-
         self.listaReg.heading('#0')
         self.listaReg.heading('col1', text='Data')
         self.listaReg.heading('col2', text='Esférico')
@@ -731,7 +713,6 @@ class Funcs():
 
     def lista_FrameExit(self):
         self.lista_Exit = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4'))
-
         self.lista_Exit.heading('#0')
         self.lista_Exit.heading('col1', text='Cod. Barras')
         self.lista_Exit.heading('col2', text='Loja')
@@ -748,7 +729,6 @@ class Funcs():
 
     def lista_FrameZero(self):
         self.listaZero = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5'))
-
         self.listaZero.heading('#0')
         self.listaZero.heading('col1', text='Esférico')
         self.listaZero.heading('col2', text='Cilindro')
@@ -768,7 +748,6 @@ class Funcs():
     def listaFrame(self):  # FUNÇÃO CADASTRO TAMBÉM USA ESSA LISTA
         self.listaCli = ttk.Treeview(self.frame_options, height=3, columns=( 'col1', 'col2', 'col3', 'col4',
                                                                              'col5', 'col6', 'col7'))
-
         self.listaCli.heading('#0')
         self.listaCli.heading('col1', text='Esférico')
         self.listaCli.heading('col2', text='Cilíndro')
@@ -792,7 +771,6 @@ class Funcs():
     def lista_RegService(self):
         self.listaRegService = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4',
                                                                             'col5', 'col6'))
-
         self.listaRegService.heading('#0')
         self.listaRegService.heading('col1', text='Data e Hora')
         self.listaRegService.heading('col2', text='Loja')
@@ -813,7 +791,6 @@ class Funcs():
 
     def lista_searchService(self):
         self.listSearchServ = ttk.Treeview(self.frame_services, height=3, columns=('col1', 'col2', 'col3', 'col4'))
-
         self.listSearchServ.heading('#0')
         self.listSearchServ.heading('col1', text='Loja')
         self.listSearchServ.heading('col2', text='Sequência')
@@ -831,7 +808,6 @@ class Funcs():
     def lista_Pesq(self):
         self.listaPesq = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5',
                                                                              'col6'))
-
         self.listaPesq.heading('#0')
         self.listaPesq.heading('col1', text='Data')
         self.listaPesq.heading('col2', text='Tipo')
