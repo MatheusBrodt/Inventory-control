@@ -94,7 +94,7 @@ class Funcs():
     def captura_dadosRegSaida(self):  # CAPTURA DE DADOS DAS ENTRYS DE REGISTRAR SAÍDA DE LENTES
         self.data_InicioEntryCapt = self.data_InicioEntry.get()
         self.data_FimEntryCapt = self.data_FimEntry.get()
-        self.store_RegServiceEntryCapt = self.store_RegEntry.get()
+        self.store_RegEntryCapt = self.store_RegEntry.get()
         if self.data_InicioEntryCapt == '' or self.data_FimEntryCapt == '' or self.store_RegEntryCapt == '':
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
             self.warning()
@@ -138,6 +138,15 @@ class Funcs():
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
             self.warning()
 
+    def pesq_Capt(self):
+        verif = []
+        self.store_PesqCapt = self.store_PesqEntry.get()
+        self.seq_PesqCapt = self.seq_PesqEntry.get()
+        verif.append(self.store_PesqCapt)
+        verif.append(self.seq_PesqCapt)
+        if '' not in verif:
+            self.text_warning = 'PREENCHA TODOS OS CAMPOS'
+            self.warning()
 # ==========================//=====================/MANIPULAÇÃO DE DADOS/==================//===========================
 
     def verification_Int(self):
@@ -404,6 +413,19 @@ class Funcs():
             self.conn.close()
             self.clear_listService()
 
+    def pesq_Service(self):
+        self.connect_BD()
+        self.cursor.execute(f"SELECT data, tipo, situation, previsao, obs, warrant FROM services WHERE "
+                            f"store = '{self.store_PesqCapt}' AND sequencia = '{self.seq_PesqCapt}'")
+        lista = self.cursor.fetchall()
+        if lista == []:
+            self.text_warning = 'SERVIÇO NÃO ENCONTRADO'
+            self.warning()
+        else:
+            for val in lista:
+                self.listaPesq.insert('',  END, values=(val))
+        self.conn.close()
+
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
         self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
@@ -645,22 +667,35 @@ class Funcs():
         self.store_service = Label(self.frame_services, text='Loja:', font=self.fontepadrao, bg='#ffd700')
         self.seq_service = Label(self.frame_services, text='Sequência:', font=self.fontepadrao, bg='#ffd700')
         self.type_service = Label(self.frame_services, text='Tipo:', font=self.fontepadrao, bg='#ffd700')
-
         # ENTRYS
         self.store_serviceEntry = ttk.Combobox(self.frame_services, font=self.fontepadrao)
         self.store_serviceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
         self.seq_serviceEntry = Entry(self.frame_services, font=self.fontepadrao, bg='white')
         self.type_serviceEntry = Entry(self.frame_services, font=self.fontepadrao, bg='white')
-
         # LOCALIZAÇÃO DAS LABELS
         self.store_service.place(relx=0.03, rely=0.02, relwidth=0.08, relheight=0.035)
         self.seq_service.place(relx=0.30, rely=0.02, relwidth=0.16, relheight=0.035)
         self.type_service.place(relx=0.80, rely=0.02, relwidth=0.08, relheight=0.035)
-
         # LOCALIZAÇÃO DAS ENTRYS
         self.store_serviceEntry.place(relx=0.11, rely=0.02, relwidth=0.12, relheight=0.035)
         self.seq_serviceEntry.place(relx=0.46, rely=0.02, relwidth=0.28, relheight=0.035)
         self.type_serviceEntry.place(relx=0.88, rely=0.02, relwidth=0.08, relheight=0.035)
+
+    def label_Pesq(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        # LABELS
+        self.store_Pesq = Label(self.frame_options, text='Loja:', font=self.fontepadrao, bg='#f0e68c')
+        self.seq_Pesq = Label(self.frame_options, text='Sequência:', font=self.fontepadrao, bg='#f0e68c')
+        # ENTRYS
+        self.store_PesqEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
+        self.store_PesqEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.seq_PesqEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        # LOCALIZAÇÃO DAS LABELS
+        self.store_Pesq.place(relx=0.115, rely=0.07, relwidth=0.07, relheight=0.045)
+        self.seq_Pesq.place(relx=0.50, rely=0.07, relwidth=0.15, relheight=0.045)
+        # LOCALIZAÇÃO DAS ENTRYS
+        self.store_PesqEntry.place(relx=0.188, rely=0.07, relwidth=0.12, relheight=0.045)
+        self.seq_PesqEntry.place(relx=0.65, rely=0.07, relwidth=0.22, relheight=0.045)
 
 # ==========================//===========================/LISTAS/========================//=============================
 
@@ -793,6 +828,28 @@ class Funcs():
 
         self.listSearchServ.place(relx=0.025, rely=0.07, relwidth=0.948, relheight=0.87)
 
+    def lista_Pesq(self):
+        self.listaPesq = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5',
+                                                                             'col6'))
+
+        self.listaPesq.heading('#0')
+        self.listaPesq.heading('col1', text='Data')
+        self.listaPesq.heading('col2', text='Tipo')
+        self.listaPesq.heading('col3', text='Situação')
+        self.listaPesq.heading('col4', text='Previsão')
+        self.listaPesq.heading('col5', text='Observação')
+        self.listaPesq.heading('col6', text='Garantia')
+
+        self.listaPesq.column('#0', width=0)
+        self.listaPesq.column('col1', width=80)
+        self.listaPesq.column('col2', width=40)
+        self.listaPesq.column('col3', width=30)
+        self.listaPesq.column('col4', width=30)
+        self.listaPesq.column('col5', width=80)
+        self.listaPesq.column('col6', width=20)
+
+        self.listaPesq.place(relx=0.025, rely=0.18, relwidth=0.95, relheight=0.65)
+
 # =============================//=======================/FRONT END/=======================//============================
 class Interface(Funcs):
 # ==========================//========================/INICIALIZAÇÃO/========================//=========================
@@ -817,7 +874,7 @@ class Interface(Funcs):
         self.label_services()
         self.lista_searchService()
         self.button_Selecionar()
-        self.button_Obs()
+        self.button_Pesq()
         root.mainloop()
 # ==========================//===========================/FRAMES/========================//=============================
 
@@ -957,13 +1014,27 @@ class Interface(Funcs):
     # BOTÃO ENTER DE ADICONAR SERVIÇOS
     def button_Selecionar(self):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
-        self.AddService = Button(self.frame_services, text='Adiconar', font=self.fontepadrao, bg='#f0e68c',
+        self.AddService = Button(self.frame_services, text='Adicionar', font=self.fontepadrao, bg='#f0e68c',
                                  command=self.option_AddService)
         self.AddService.place(relx=0.425, rely=0.947, relwidth=0.15, relheight=0.04)
     # FUNÇÃO DO BOTÃO DE ADICIONAR SERVIÇOS
     def option_AddService(self):
         print("Botão 'ENTER/ADICONAR SERVIÇOS' clicado!")
         self.addServiceList()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # BOTÃO ENTER DE PESQUISAR SERVIÇOS
+    def button_PesqEnter(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.pesqService = Button(self.frame_options, text='Pesquisar', font=self.fontepadrao, bg='#f0e68c',
+                                 command=self.option_buttonPesqEnter)
+        self.pesqService.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
+    # FUNÇÃO DO BOTÃO DE PESQUISAR SERVIÇOS
+    def option_buttonPesqEnter(self):
+        print("Botão 'ENTER/PESQUISAR SERVIÇOS' clicado!")
+        self.pesq_Capt()
+        self.pesq_Service()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # =========================//============================/BOTÕES/===========================//==========================
 
@@ -1062,14 +1133,17 @@ class Interface(Funcs):
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    def button_Obs(self):
-        self.buttonObs = Button(self.frame_buttons, text='Registrar\nObservações', bg='#c0c0c0', fg='black',
-                          command=self.option_buttonObs)
+    def button_Pesq(self):
+        self.buttonObs = Button(self.frame_buttons, text='Pesquisar\nServiços', bg='#c0c0c0', fg='black',
+                          command=self.option_buttonPesq)
         self.buttonObs["font"] = ("Verdana", 10, "italic", "bold")
         self.buttonObs.place(relx=0.05, rely=0.53, relwidth=0.90, relheight=0.10)
-    def option_buttonObs(self):
-        print('Botão Registra Observações clicado!')
+    def option_buttonPesq(self):
+        print('Botão Pesquisar Serviços clicado!')
         self.options()
+        self.label_Pesq()
+        self.lista_Pesq()
+        self.button_PesqEnter()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
