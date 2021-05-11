@@ -52,7 +52,6 @@ class Funcs():
 
     def clear_dadosRegServiço(self):  # LIMPA OS DADOS DO REGISTRO DE SERVIÇOS
         if self.verif:
-            self.store_RegServiceEntryRem = self.store_RegServiceEntry.delete(0,END)
             self.seq_RegServiceEntryRem = self.seq_RegServiceEntry.delete(0,END)
             self.tipo_RegServiceEntryRem = self.tipo_RegServiceEntry.delete(0, END)
             self.prevDay_RegServiceEntryRem = self.prevDay_RegServiceEntry.delete(0,END)
@@ -363,7 +362,7 @@ class Funcs():
                 self.cursor.execute(f"INSERT INTO services VALUES "
                                     f"(DEFAULT, '{self.current_date}', '{self.store_RegServiceEntryCapt}', "
                                     f"'{self.seq_RegServiceEntryCapt}', '{self.tipo_RegServiceEntryCapt}', "
-                                    f"'{self.sit_RegServiceEntryCapt}', '{previsao}', '')")
+                                    f"'{self.sit_RegServiceEntryCapt}', '{previsao}', '', DEFAULT)")
                 self.conn.commit()
                 self.text_warning = 'SERVIÇO ADICIONADO'
                 self.warning()
@@ -392,16 +391,16 @@ class Funcs():
         self.connect_BD()
         self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND "
                             f"sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
-        verif = self.cursor.fetchone()
-        if verif is None:
+        verif = self.cursor.fetchall()
+        if verif == []:
             self.text_warning = 'SERVIÇO NÃO CADASTRADO'
             self.warning()
         else:
             self.cursor.execute(f"UPDATE services SET data = '{self.current_date}', situation = 'Finalizado' WHERE "
                                 f"store = '{self.store_serviceEntryCapt}' AND sequencia = "
-                                f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'" )
+                                f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
             self.conn.commit()
-            self.cursor.execute(f"SELECT store, sequencia, tipo FROM services WHERE data = '{self.current_date}' "
+            self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE data = '{self.current_date}' "
                                 f"AND store = '{self.store_serviceEntryCapt}' AND sequencia = "
                                 f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}' AND "
                                 f"situation = 'Finalizado'")
