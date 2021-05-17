@@ -11,6 +11,7 @@ class Funcs():
     def date_Today(self):
         from datetime import date
         self.date = date.today()
+        print(self.date)
 
     def date_hour(self):
         from datetime import datetime
@@ -55,7 +56,6 @@ class Funcs():
             self.seq_RegServiceEntryRem = self.seq_RegServiceEntry.delete(0,END)
             self.tipo_RegServiceEntryRem = self.tipo_RegServiceEntry.delete(0, END)
             self.prevDay_RegServiceEntryRem = self.prevDay_RegServiceEntry.delete(0,END)
-            self.prevMonth_RegServiceEntryRem = self.prevMonth_RegServiceEntry.delete(0,END)
 
     def clear_listService(self):  # LIMPA OS DADOS DA LISTA DE SERVIÇOS
         self.seq_serviceEntryRem = self.seq_serviceEntry.delete(0, END)
@@ -328,7 +328,6 @@ class Funcs():
             self.connect_BD()
             self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
             result = self.cursor.fetchone()
-            print(result[0])
             if result is not None and result[0] > 0:
                 self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
                 self.cursor.execute(f"INSERT INTO lens VALUES "
@@ -358,21 +357,51 @@ class Funcs():
             data_prev = datetime.strptime(previsao, '%Y-%m-%d').date()
             data_today = self.date
             self.connect_BD()
-            if data_prev > data_today:
-                self.cursor.execute(f"INSERT INTO services VALUES "
-                                    f"(DEFAULT, '{self.current_date}', '{self.store_RegServiceEntryCapt}', "
-                                    f"'{self.seq_RegServiceEntryCapt}', '{self.tipo_RegServiceEntryCapt}', "
-                                    f"'{self.sit_RegServiceEntryCapt}', '{previsao}', '', DEFAULT)")
-                self.conn.commit()
-                self.text_warning = 'SERVIÇO ADICIONADO'
-                self.warning()
-                print('SERVIÇO ADICIONADO')
-                self.clear_dadosRegServiço()
-                self.cursor.execute(f"SELECT data, store, sequencia, tipo, situation, previsao FROM services "
-                                    f"WHERE sequencia = '{self.seq_RegServiceEntryCapt}'")
-                lista = self.cursor.fetchall()
-                for dados in lista:
-                    self.listaRegService.insert('', END, values=(dados))
+            if data_prev >= data_today:
+                self.cursor.execute(f"SELECT sequencia FROM services WHERE store = '{self.store_RegServiceEntryCapt}' "
+                                    f"AND sequencia = '{self.seq_RegServiceEntryCapt}'")
+                garantia = f'{self.seq_RegServiceEntryCapt}'
+                if 'G' in garantia or 'g' in garantia:
+                    self.connect_BD()
+                    self.date_hour()
+                    self.cursor.execute(f"INSERT INTO services VALUES "
+                                        f"('{self.date}', DEFAULT, '{self.current_date}', "
+                                        f"'{self.store_RegServiceEntryCapt}', '{self.seq_RegServiceEntryCapt}', "
+                                        f"'{self.tipo_RegServiceEntryCapt}', '{self.sit_RegServiceEntryCapt}', "
+                                        f"'{previsao}', '', 'Sim')")
+                    self.conn.commit()
+                    self.text_warning = 'GARANTIA ADICIONADA'
+                    self.warning()
+                    self.clear_dadosRegServiço()
+                    self.cursor.execute(f"SELECT data, store, sequencia, tipo, situation, previsao FROM services "
+                                        f"WHERE store = {self.store_RegServiceEntryCapt} AND "
+                                        f"sequencia = '{self.seq_RegServiceEntryCapt}'")
+                    lista = self.cursor.fetchall()
+                    for dados in lista:
+                        self.listaRegService.insert('', END, values=(dados))
+                    self.conn.close()
+                else:
+                    exist = self.cursor.fetchone()
+                    if exist is None:
+                        self.date_hour()
+                        self.cursor.execute(f"INSERT INTO services VALUES "
+                                            f"('{self.date}', DEFAULT, '{self.current_date}', "
+                                            f"'{self.store_RegServiceEntryCapt}', '{self.seq_RegServiceEntryCapt}', "
+                                            f"'{self.tipo_RegServiceEntryCapt}', '{self.sit_RegServiceEntryCapt}', "
+                                            f"'{previsao}', '', DEFAULT)")
+                        self.conn.commit()
+                        self.text_warning = 'SERVIÇO ADICIONADO'
+                        self.warning()
+                        self.clear_dadosRegServiço()
+                        self.cursor.execute(f"SELECT data, store, sequencia, tipo, situation, previsao FROM services "
+                                            f"WHERE store = {self.store_RegServiceEntryCapt} AND "
+                                            f"sequencia = '{self.seq_RegServiceEntryCapt}'")
+                        lista = self.cursor.fetchall()
+                        for dados in lista:
+                            self.listaRegService.insert('', END, values=(dados))
+                    else:
+                        self.text_warning = 'SERVIÇO JÁ EXISTE'
+                        self.warning()
             else:
                 self.text_warning = 'PREVISÃO INVÁLIDA'
                 self.warning()
@@ -388,6 +417,9 @@ class Funcs():
             type_lens = 'Multifocal'
         elif type_lens == 'B':
             type_lens = 'Bifocal'
+        else:
+            self.text_warning = 'DIGITE O TIPO CORRETO'
+            self.warning()
         self.connect_BD()
         self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND "
                             f"sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
@@ -396,9 +428,10 @@ class Funcs():
             self.text_warning = 'SERVIÇO NÃO CADASTRADO'
             self.warning()
         else:
-            self.cursor.execute(f"UPDATE services SET data = '{self.current_date}', situation = 'Finalizado' WHERE "
-                                f"store = '{self.store_serviceEntryCapt}' AND sequencia = "
-                                f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
+            self.date_hour()
+            self.cursor.execute(f"UPDATE services SET data_id = '{self.date}', data = '{self.current_date}', "
+                                f"situation = 'Finalizado' WHERE store = '{self.store_serviceEntryCapt}' "
+                                f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
             self.conn.commit()
             self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE data = '{self.current_date}' "
                                 f"AND store = '{self.store_serviceEntryCapt}' AND sequencia = "
@@ -423,6 +456,22 @@ class Funcs():
                 self.listaPesq.insert('',  END, values=(val))
         self.conn.close()
 
+    def cont(self):  # RESOLVENDO O BUG DA CONTAGEM DE SERVIÇOS
+        self.connect_BD()
+        self.cursor.execute(f"SELECT COUNT(data_id) FROM services WHERE data_id = '{self.date}' "
+                            f"AND situation = 'Finalizado'")
+        total_day = self.cursor.fetchone()
+        self.tot_D = f'{total_day[0]}'
+        per_inic = f'{self.date.year}-{self.date.month}-01'
+        per_end = f'{self.date.year}-{self.date.month}-31'
+        self.cursor.execute(f"SELECT COUNT(data_id) FROM services WHERE data_id BETWEEN '{per_inic}' AND '{per_end}' "
+                            f"AND situation = 'Finalizado'")
+        total_month = self.cursor.fetchone()
+        self.tot_M = f'{total_month[0]}'
+        self.conn.close()
+
+
+
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
         self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
@@ -445,25 +494,32 @@ class Funcs():
         self.eye = Label(self.frame_options, text='Olho:', font=self.fontepadrao, bg='#f0e68c')
         #  ESTRADA DE DADOS
         self.codBarrasEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.codBarrasEntry.bind("<Return>", self.option_Ir)
         self.sphe_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.sphe_Entry['values'] = ('0.00', '+0.25', '+0.50', '+0.75', '+1.00', '+1.25', '+1.50', '+1.75', '+2.00',
                                         '+2.25', '+2.50', '+2.75', '+3.00', '+3.25', '+3.50', '+3.75', '+4.00',
                                         '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25',
                                         '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.sphe_Entry.bind("<Return>", self.option_Ir)
         self.cylin_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.cylin_Entry['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
                                       '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.cylin_Entry.bind("<Return>", self.option_Ir)
         self.lab_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.lab_Entry['values'] = ('Farol', 'Haytek', 'Zeiss')
+        self.lab_Entry.bind("<Return>", self.option_Ir)
         self.mat_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.mat_Entry['values'] = ('CR/AR 1.50', 'CR/AR 1.56', 'CR/AR BLUE 1.56', 'POLI/AR 1.59', 'POLI/AR BLUE 1.59',
                                     'CR/AR 1.56 Progressiva', 'Zeiss 1.50 Platinum', 'Zeiss 1.50 BlueProtect',
                                     'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
+        self.mat_Entry.bind("<Return>", self.option_Ir)
         self.add_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.add_Entry['values'] = ('1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '3.25',
                                     '3.50')
+        self.add_Entry.bind("<Return>", self.option_Ir)
         self.eye_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.eye_Entry['values'] = ('D', 'E')
+        self.eye_Entry.bind("<Return>", self.option_Ir)
         #  LOCALIZAÇÃO DAS LABELS
         self.codBarras.place(relx=0.010, rely=0.03, relwidth=0.20, relheight=0.045)
         self.sphe_degree.place(relx=0.44, rely=0.03, relwidth=0.17, relheight=0.045)
@@ -493,12 +549,15 @@ class Funcs():
                                         '+2.25', '+2.50', '+2.75', '+3.00', '+3.25', '+3.50', '+3.75', '+4.00',
                                         '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00', '-2.25',
                                         '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.sphe_VisEntry.bind("<Return>", self.option_ButtonVis)
         self.cylin_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.cylin_VisEntry['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
                                          '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.cylin_VisEntry.bind("<Return>", self.option_ButtonVis)
         self.add_VisEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.add_VisEntry['values'] = ('1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '3.25',
                                        '3.50')
+        self.add_VisEntry.bind("<Return>", self.option_ButtonVis)
         # LOCALIZAÇÃO DAS LABELS
         self.sphe_Vis.place(relx=0.08, rely=0.10, relwidth=0.14, relheight=0.045)
         self.cylin_Vis.place(relx=0.358, rely=0.10, relwidth=0.20, relheight=0.045)
@@ -520,19 +579,24 @@ class Funcs():
         self.spheMax_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.spheMax_LensZero['values'] = ('-0.25', '-0.50', '-0.75','-1.00', '-1.25', '-1.50', '-1.75', '-2.00',
                                            '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75', '-4.00')
+        self.spheMax_LensZero.bind("<Return>", self.option_ButtonBuscar)
         self.spheMin_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.spheMin_LensZero['values'] = ('0.00', '+0.25', '+0.50', '+0.75','+1.00', '+1.25', '+1.50', '+1.75', '+2.00',
                                            '+2.25', '+2.50', '+2.75', '+3.00', '+3.25', '+3.50', '+3.75', '+4.00')
+        self.spheMin_LensZero.bind("<Return>", self.option_ButtonBuscar)
         self.cylinEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.cylinEntry_LensZero['values'] = ('0.00', '-0.25', '-0.50', '-0.75', '-1.00', '-1.25', '-1.50', '-1.75',
                                               '-2.00', '-2.25', '-2.50', '-2.75', '-3.00', '-3.25', '-3.50', '-3.75',
                                               '-4.00')
+        self.cylinEntry_LensZero.bind("<Return>", self.option_ButtonBuscar)
         self.matEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.matEntry_LensZero['values'] = ('CR/AR 1.50', 'CR/AR 1.56', 'CR/AR BLUE 1.56', 'POLI/AR 1.59',
                                             'POLI/AR BLUE 1.59', 'CR/AR 1.56 Progressiva', 'Zeiss 1.50 Platinum',
                                             'Zeiss 1.50 BlueProtect', 'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
+        self.matEntry_LensZero.bind("<Return>", self.option_ButtonBuscar)
         self.labEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.labEntry_LensZero['values'] = ('Farol', 'Haytek', 'Zeiss')
+        self.labEntry_LensZero.bind("<Return>", self.option_ButtonBuscar)
         # LOCALIZAÇÃO DAS LABELS
         self.sphe_LensZero.place(relx=0.17, rely=0.03, relwidth=0.14, relheight=0.045)
         self.bar_LensZero.place(relx=0.43, rely=0.03, relwidth=0.04, relheight=0.045)
@@ -555,12 +619,16 @@ class Funcs():
         self.reason_Exit = Label(self.frame_options, text='Motivo:', font=self.fontepadrao, bg='#f0e68c')
         # ENTRYS
         self.codBarrasEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.codBarrasEntry_Exit.bind("<Return>", self.option_ButtonExit)
         self.storeEntry_Exit = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.storeEntry_Exit['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.storeEntry_Exit.bind("<Return>", self.option_ButtonExit)
         self.seqEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.seqEntry_Exit.bind("<Return>", self.option_ButtonExit)
         self.reasonEntry_Exit = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.reasonEntry_Exit['values'] = ('Montagem', 'Garantia', 'Quebra')
         self.reasonEntry_Exit.current(0)
+        self.reasonEntry_Exit.bind("<Return>", self.option_ButtonExit)
         # PLACES ENTRYS E LABELS
         self.codBarrasEntry_Exit.place(relx=0.245, rely=0.03, relwidth=0.23, relheight=0.045)
         self.storeEntry_Exit.place(relx=0.575, rely=0.03, relwidth=0.11, relheight=0.045)
@@ -580,9 +648,12 @@ class Funcs():
         self.store_Reg = Label(self.frame_options, text='Loja:', font=self.fontepadrao, bg='#f0e68c')
         # ENTRYS
         self.data_InicioEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.data_InicioEntry.bind("<Return>", self.option_ButtonReg)
         self.data_FimEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.data_FimEntry.bind("<Return>", self.option_ButtonReg)
         self.store_RegEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.store_RegEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.store_RegEntry.bind("<Return>", self.option_ButtonReg)
         # LOCALIZAÇÃO DAS LABELS
         self.data_Inicio.place(relx=0.02, rely=0.03, relwidth=0.17, relheight=0.045)
         self.data_Fim.place(relx=0.41, rely=0.03, relwidth=0.16, relheight=0.045)
@@ -606,25 +677,32 @@ class Funcs():
         # ENTRYS
         self.store_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.store_RegServiceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.store_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.seq_RegServiceEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.seq_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.tipo_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.tipo_RegServiceEntry['values'] = ('Visão Simples', 'Multifocal', 'Bifocal')
+        self.tipo_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.sit_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.sit_RegServiceEntry['values'] = ('Digitação', 'Aguardando', 'Montagem', 'Finalizado', 'Retrabalho')
         self.sit_RegServiceEntry.current(1)
+        self.sit_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.prevDay_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.prevDay_RegServiceEntry['values'] = ('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11',
                                                   '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22',
                                                   '23', '24', '25', '26', '27', '28', '29', '30', '31')
+        self.prevDay_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.barra_of_date1 = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
         self.prevMonth_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.prevMonth_RegServiceEntry['values'] = ('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho',
                                                     'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro')
+        self.prevMonth_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.barra_of_date2 = Label(self.frame_options, text='Cód. De Barras:', font=self.fontepadrao, bg='#f0e68c')
         self.prevYear_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.prevYear_RegServiceEntry['values'] = ('2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027',
                                                    '2028', '2029', '2030')
         self.prevYear_RegServiceEntry.current(1)
+        self.prevYear_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         #  LOCALIZAÇÃO DAS LABELS
         self.store_RegService.place(relx=0.06, rely=0.03, relwidth=0.07, relheight=0.045)
         self.seq_RegService.place(relx=0.33, rely=0.03, relwidth=0.15, relheight=0.045)
@@ -652,8 +730,11 @@ class Funcs():
         # ENTRYS
         self.store_serviceEntry = ttk.Combobox(self.frame_services, font=self.fontepadrao)
         self.store_serviceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.store_serviceEntry.bind("<Return>", self.option_AddService)
         self.seq_serviceEntry = Entry(self.frame_services, font=self.fontepadrao, bg='white')
+        self.seq_serviceEntry.bind("<Return>", self.option_AddService)
         self.type_serviceEntry = Entry(self.frame_services, font=self.fontepadrao, bg='white')
+        self.type_serviceEntry.bind("<Return>", self.option_AddService)
         # LOCALIZAÇÃO DAS LABELS
         self.store_service.place(relx=0.03, rely=0.02, relwidth=0.08, relheight=0.035)
         self.seq_service.place(relx=0.30, rely=0.02, relwidth=0.16, relheight=0.035)
@@ -671,13 +752,26 @@ class Funcs():
         # ENTRYS
         self.store_PesqEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.store_PesqEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.store_PesqEntry.bind("<Return>", self.option_buttonPesqEnter)
         self.seq_PesqEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
+        self.seq_PesqEntry.bind("<Return>", self.option_buttonPesqEnter)
         # LOCALIZAÇÃO DAS LABELS
         self.store_Pesq.place(relx=0.115, rely=0.07, relwidth=0.07, relheight=0.045)
         self.seq_Pesq.place(relx=0.50, rely=0.07, relwidth=0.15, relheight=0.045)
         # LOCALIZAÇÃO DAS ENTRYS
         self.store_PesqEntry.place(relx=0.188, rely=0.07, relwidth=0.12, relheight=0.045)
         self.seq_PesqEntry.place(relx=0.65, rely=0.07, relwidth=0.22, relheight=0.045)
+
+    def label_Cont(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.cont_Day = Label(self.frame_services, text='Dia:', font=self.fontepadrao, bg='#ffd700')
+        self.total_Day = Label(self.frame_services, text=self.tot_D, font=self.fontepadrao, bg='#ffd700', fg='#0000cd')
+        self.cont_Month = Label(self.frame_services, text='Mês:', font=self.fontepadrao, bg='#ffd700')
+        self.total_Month = Label(self.frame_services, text=self.tot_M, font=self.fontepadrao, bg='#ffd700', fg='#0000cd')
+        self.cont_Day.place(relx=0.022, rely=0.945, relwidth=0.06, relheight=0.045)
+        self.cont_Month.place(relx=0.80, rely=0.945, relwidth=0.07, relheight=0.045)
+        self.total_Day.place(relx=0.08, rely=0.945, relwidth=0.06, relheight=0.045)
+        self.total_Month.place(relx=0.875, rely=0.945, relwidth=0.10, relheight=0.045)
 
 # ==========================//===========================/LISTAS/========================//=============================
 
@@ -850,6 +944,8 @@ class Interface(Funcs):
         self.lista_searchService()
         self.button_Selecionar()
         self.button_Pesq()
+        self.cont()
+        self.label_Cont()
         root.mainloop()
 # ==========================//===========================/FRAMES/========================//=============================
 
@@ -906,9 +1002,11 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.Ir = Button(self.frame_options, text='Cadastrar', font=self.fontepadrao, bg='#f0e68c',
                          command=self.option_Ir)
+        self.Ir.bind("<Enter>", self.passou_por_cima)
+        self.Ir.bind("<Leave>", self.saiu_de_cima)
         self.Ir.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER PARA CADASTRO DE LENTES
-    def option_Ir(self):
+    def option_Ir(self, arg):
         print("Botão 'ir' clicado!".title())
         self.verification_Code()
         self.captura_dados()
@@ -921,9 +1019,11 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.exitButton = Button(self.frame_options, text='Retirar', font=self.fontepadrao, bg='#f0e68c',
                          command=self.option_ButtonExit)
+        self.exitButton.bind("<Enter>", self.passou_por_cima)
+        self.exitButton.bind("<Leave>", self.saiu_de_cima)
         self.exitButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER PARA RETIRAR LENTES
-    def option_ButtonExit(self):
+    def option_ButtonExit(self, arg):
         print("Botão 'ENTER/RETIRAR' clicado!")
         self.remove_LensAdd()
     #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -932,11 +1032,13 @@ class Interface(Funcs):
     #  BOTÃO ENTER DE VISUALIZAÇÃO DE LENTES
     def button_Vis(self):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
-        self.exitButton = Button(self.frame_options, text='Visualizar', font=self.fontepadrao, bg='#f0e68c',
+        self.VisButton = Button(self.frame_options, text='Visualizar', font=self.fontepadrao, bg='#f0e68c',
                                  command=self.option_ButtonVis)
-        self.exitButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
+        self.VisButton.bind("<Enter>", self.passou_por_cima)
+        self.VisButton.bind("<Leave>", self.saiu_de_cima)
+        self.VisButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER PARA VISUALIZAR LENTES
-    def option_ButtonVis(self):
+    def option_ButtonVis(self,arg):
         print("Botão 'ENTER/VISUALIZAR' clicado!")
         self.captura_dadosVis()
         self.option_VisLens()
@@ -949,9 +1051,11 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.lensZeroButton = Button(self.frame_options, text='Buscar', font=self.fontepadrao, bg='#f0e68c',
                          command=self.option_ButtonBuscar)
+        self.lensZeroButton.bind("<Enter>", self.passou_por_cima)
+        self.lensZeroButton.bind("<Leave>", self.saiu_de_cima)
         self.lensZeroButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER DE BUSCAR LENTES ZERADAS
-    def option_ButtonBuscar(self):
+    def option_ButtonBuscar(self, arg):
         print("Botão 'ENTER/BUSCAR LENS ZERO' clicado!")
         self.captura_dadosLensZero()
         self.lensZero()
@@ -963,9 +1067,11 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.button_RegEn = Button(self.frame_options, text='Procurar', font=self.fontepadrao, bg='#f0e68c',
                                      command=self.option_ButtonReg)
+        self.button_RegEn.bind("<Enter>", self.passou_por_cima)
+        self.button_RegEn.bind("<Leave>", self.saiu_de_cima)
         self.button_RegEn.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO DE REGISTRAR LENTES
-    def option_ButtonReg(self):
+    def option_ButtonReg(self, arg):
         print("Botão 'ENTER/REGISTRO' clicado!")
         self.captura_dadosRegSaida()
         self.print_RegSaida()
@@ -977,12 +1083,15 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.RegServiceEnter = Button(self.frame_options, text='Registrar', font=self.fontepadrao, bg='#f0e68c',
                                    command=self.option_RegServiceEnter)
+        self.RegServiceEnter.bind("<Enter>", self.passou_por_cima)
+        self.RegServiceEnter.bind("<Leave>", self.saiu_de_cima)
         self.RegServiceEnter.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO DE REGISTRR SERVIÇOS
-    def option_RegServiceEnter(self):
+    def option_RegServiceEnter(self, arg):
         print("Botão 'ENTER/REGISTRO DE SERVIÇOS' clicado!")
         self.captura_dadosRegServico()
         self.recording_RegService()
+        self.cont()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -991,11 +1100,14 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.AddService = Button(self.frame_services, text='Adicionar', font=self.fontepadrao, bg='#f0e68c',
                                  command=self.option_AddService)
+        self.AddService.bind("<Enter>", self.passou_por_cima)
+        self.AddService.bind("<Leave>", self.saiu_de_cima)
         self.AddService.place(relx=0.425, rely=0.947, relwidth=0.15, relheight=0.04)
     # FUNÇÃO DO BOTÃO DE ADICIONAR SERVIÇOS
-    def option_AddService(self):
+    def option_AddService(self, arg):
         print("Botão 'ENTER/ADICONAR SERVIÇOS' clicado!")
         self.addServiceList()
+        self.cont()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1004,12 +1116,22 @@ class Interface(Funcs):
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.pesqService = Button(self.frame_options, text='Pesquisar', font=self.fontepadrao, bg='#f0e68c',
                                  command=self.option_buttonPesqEnter)
+        self.pesqService.bind("<Enter>", self.passou_por_cima)
+        self.pesqService.bind("<Leave>", self.saiu_de_cima)
         self.pesqService.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO DE PESQUISAR SERVIÇOS
-    def option_buttonPesqEnter(self):
+    def option_buttonPesqEnter(self, arg):
         print("Botão 'ENTER/PESQUISAR SERVIÇOS' clicado!")
         self.pesq_Capt()
         self.pesq_Service()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # EFEITOS NSO BOTÕES
+    def passou_por_cima(self, event):
+        event.widget.config(relief=GROOVE)
+    def saiu_de_cima(self, event):
+        event.widget.config(relief=RAISED)
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # =========================//============================/BOTÕES/===========================//==========================
 
@@ -1019,9 +1141,12 @@ class Interface(Funcs):
         self.CadastrarLente = Button(self.frame_buttons, text="Cadastrar", command=self.option_RegisterLens,
                                      bd=2, bg="#c0c0c0", fg="black")
         self.CadastrarLente["font"] = ("Verdana", 10, "italic", "bold")
+        self.CadastrarLente.bind("<Enter>", self.passou_por_cima)
+        self.CadastrarLente.bind("<Leave>", self.saiu_de_cima)
+        self.CadastrarLente.bind("f1", self.option_RegisterLens)
         self.CadastrarLente.place(relx=0.05, rely=0.02, relwidth=0.90, relheight=0.05)
     #  OPÇOES DE CADASTRO DE LENTES
-    def option_RegisterLens(self):
+    def option_RegisterLens(self, event=''):
         print("Botão de cadastro clicado!".title())
         self.label_and_entry()
         self.button_Ir()
@@ -1034,6 +1159,8 @@ class Interface(Funcs):
         self.VisEstoque = Button(self.frame_buttons, text="Vis. Estoque", bd=2, bg="#c0c0c0", fg="black",
                                  command=self.exibirOpcoes_Vis)
         self.VisEstoque["font"] = ("Verdana", 10, "italic", "bold")
+        self.VisEstoque.bind("<Enter>", self.passou_por_cima)
+        self.VisEstoque.bind("<Leave>", self.saiu_de_cima)
         self.VisEstoque.place(relx=0.05, rely=0.08, relwidth=0.90, relheight=0.05)
     #  OPÇÕES DE VISUALIZAÇÃO DO ESTOQUE
     def exibirOpcoes_Vis(self):
@@ -1050,6 +1177,8 @@ class Interface(Funcs):
         self.LensZero = Button(self.frame_buttons, text="Lentes\nem\nFalta", bd=2, bg="#c0c0c0", fg="black",
                                command=self.zero_lens)
         self.LensZero["font"] = ("Verdana", 10, "italic", "bold")
+        self.LensZero.bind("<Enter>", self.passou_por_cima)
+        self.LensZero.bind("<Leave>", self.saiu_de_cima)
         self.LensZero.place(relx=0.05, rely=0.14, relwidth=0.90, relheight=0.10)
     #  OPÇÕES DE LENTES ZERADAS NO ESTOQUE
     def zero_lens(self):
@@ -1066,6 +1195,8 @@ class Interface(Funcs):
         self.Retirar = Button(self.frame_buttons, text="Retirar", bd=2, bg="#c0c0c0", fg="black",
                               command=self.lens_output)
         self.Retirar["font"] = ("Verdana", 10, "italic", "bold")
+        self.Retirar.bind("<Enter>", self.passou_por_cima)
+        self.Retirar.bind("<Leave>", self.saiu_de_cima)
         self.Retirar.place(relx=0.05, rely=0.25, relwidth=0.90, relheight=0.05)
     #  OPÇÕES DE RETIRAR LENTES
     def lens_output(self):
@@ -1082,6 +1213,8 @@ class Interface(Funcs):
         self.RegSaida = Button(self.frame_buttons, text="Registro\nde\nSaída", bg="#c0c0c0", fg="black",
                                command=self.reg_output)
         self.RegSaida["font"] = ("Verdana", 10, "italic", "bold")
+        self.RegSaida.bind("<Enter>", self.passou_por_cima)
+        self.RegSaida.bind("<Leave>", self.saiu_de_cima)
         self.RegSaida.place(relx=0.05, rely=0.31, relwidth=0.90, relheight=0.10)
     #  OPÇÕES DE REGISTRAR SAÍDAS DE LENTES
     def reg_output(self):
@@ -1098,6 +1231,8 @@ class Interface(Funcs):
         self.regService = Button(self.frame_buttons, text='Registrar\nServiços', bg='#c0c0c0', fg='black',
                                  command=self.option_buttonRegService)
         self.regService["font"] = ("Verdana", 10, "italic", "bold")
+        self.regService.bind("<Enter>", self.passou_por_cima)
+        self.regService.bind("<Leave>", self.saiu_de_cima)
         self.regService.place(relx=0.05, rely=0.42, relwidth=0.90, relheight=0.10)
     def option_buttonRegService(self):
         print('Botão Registrar Serviços clicado!')
@@ -1112,6 +1247,8 @@ class Interface(Funcs):
         self.buttonObs = Button(self.frame_buttons, text='Pesquisar\nServiços', bg='#c0c0c0', fg='black',
                           command=self.option_buttonPesq)
         self.buttonObs["font"] = ("Verdana", 10, "italic", "bold")
+        self.buttonObs.bind("<Enter>", self.passou_por_cima)
+        self.buttonObs.bind("<Leave>", self.saiu_de_cima)
         self.buttonObs.place(relx=0.05, rely=0.53, relwidth=0.90, relheight=0.10)
     def option_buttonPesq(self):
         print('Botão Pesquisar Serviços clicado!')
@@ -1126,6 +1263,8 @@ class Interface(Funcs):
     def button_Sair(self):
         self.Sair = Button(self.frame_buttons, text="Sair", bg="#c0c0c0", fg="black")
         self.Sair["font"] = ("Verdana", 10, "italic", "bold")
+        self.Sair.bind("<Enter>", self.passou_por_cima)
+        self.Sair.bind("<Leave>", self.saiu_de_cima)
         self.Sair["command"] = quit
         self.Sair.place(relx=0.05, rely=0.93, relwidth=0.90, relheight=0.05)
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
