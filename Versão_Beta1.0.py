@@ -898,6 +898,11 @@ class Funcs():
 
         self.listSearchServ.place(relx=0.025, rely=0.07, relwidth=0.948, relheight=0.87)
 
+        # BARRA DE ROLAGEM
+        self.scroolbar = Scrollbar(self.listSearchServ, orient='vertical')
+        self.listSearchServ.configure(yscroll=self.scroolbar.set)
+        self.scroolbar.place(relx=0.967, rely=0.042, relwidth=0.03, relheight=0.956)
+
     def lista_Pesq(self):
         self.listaPesq = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5',
                                                                              'col6'))
