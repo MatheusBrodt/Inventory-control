@@ -21,5 +21,4 @@ class Interface_Login():
         self.userLogin = Label(self.login, text='Usuário', bg='white', fg='black')
         self.userLogin.place(relx=0.04, rely=0.10, relwidth=0.25, relheight=0.42)
 
-
 Interface_Login()

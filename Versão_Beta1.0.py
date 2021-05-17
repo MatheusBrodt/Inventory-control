@@ -5,7 +5,6 @@ print('\033[31mRODANDO O PROGRAMA!\033[m')
 
 root = Tk()
 
-
 # ===========================//=======================/BACK END/======================//================================
 class Funcs():
     def date_Today(self):
@@ -20,14 +19,10 @@ class Funcs():
 
     def connect_BD(self):
         try:
-            self.text_warning = ''
-            self.warning()
             self.conn = mysql.connector.connect(host='localhost', user='root', password='', database="lab_carol")
             self.cursor = self.conn.cursor()
             print('Conectado no BD')
         except mysql.connector.errors.ProgrammingError:  # AJUSTAR EXCESSÃO DE ERRO
-            self.text_warning = 'ERRO NO BANCO DE DADOS'
-            self.warning()
             print('\033[31mErro ao conectar no BD!\033[m')
 
 # ==========================//====================/LIMPEZA DE ENTRYS/====================//=============================
@@ -133,9 +128,22 @@ class Funcs():
         verif.append(self.store_serviceEntryCapt)
         verif.append(self.seq_serviceEntryCapt)
         verif.append(self.type_serviceEntryCapt)
-        if '' not in verif:
+        print(verif)
+        if '' in verif:
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
             self.warning()
+        else:
+            self.type_lens = str(self.type_serviceEntryCapt).upper()
+            if self.type_lens == 'VS':
+                self.type_lens = 'Visão Simples'
+            elif self.type_lens == 'M':
+                self.type_lens = 'Multifocal'
+            elif self.type_lens == 'B':
+                self.type_lens = 'Bifocal'
+            else:
+                self.text_warning = 'DIGITE O TIPO CORRETO'
+                self.warning()
+            self.addServiceList()
 
     def pesq_Capt(self):
         verif = []
@@ -303,9 +311,13 @@ class Funcs():
                             f"WHERE lens.data BETWEEN '{self.data_InicioEntryCapt}' AND '{self.data_FimEntryCapt}' "
                             f"AND lens.store = '{self.store_RegEntryCapt}' ORDER BY lens.data")
         lista = self.cursor.fetchall()
-        self.listaReg.delete(*self.listaReg.get_children())
-        for dado in lista:
-            self.listaReg.insert('', END, values=(dado))
+        if lista == []:
+            self.text_warning = 'VERIFIQUE O PERÍODO'
+            self.warning()
+        else:
+            self.listaReg.delete(*self.listaReg.get_children())
+            for dado in lista:
+                self.listaReg.insert('', END, values=(dado))
         self.conn.close()
 
     def lensZero(self):
@@ -408,40 +420,38 @@ class Funcs():
             self.conn.close()
 
     def addServiceList(self):
-        # IDENTIFICAR SE EXISTE SERVIÇO À SER MODIFICADO O STATUS
-        self.captura_ListService()
-        type_lens = str(self.type_serviceEntryCapt).upper()
-        if type_lens == 'VS':
-            type_lens = 'Visão Simples'
-        elif type_lens == 'M':
-            type_lens = 'Multifocal'
-        elif type_lens == 'B':
-            type_lens = 'Bifocal'
-        else:
-            self.text_warning = 'DIGITE O TIPO CORRETO'
-            self.warning()
         self.connect_BD()
-        self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND "
-                            f"sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
+        print(f"SELECT * FROM services WHERE store = {self.store_serviceEntryCapt} AND sequencia = "
+                            f"{self.seq_serviceEntryCapt} AND tipo = {self.type_lens}")
+        self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND sequencia = "
+                            f"'{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}' AND situation = 'Finalizado'")
         verif = self.cursor.fetchall()
-        if verif == []:
-            self.text_warning = 'SERVIÇO NÃO CADASTRADO'
+        if verif != []:
+            self.text_warning= 'SERVIÇO JÁ FINALIZADO'
             self.warning()
         else:
-            self.date_hour()
-            self.cursor.execute(f"UPDATE services SET data_id = '{self.date}', data = '{self.current_date}', "
-                                f"situation = 'Finalizado' WHERE store = '{self.store_serviceEntryCapt}' "
-                                f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}'")
-            self.conn.commit()
-            self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE data = '{self.current_date}' "
-                                f"AND store = '{self.store_serviceEntryCapt}' AND sequencia = "
-                                f"'{self.seq_serviceEntryCapt}' AND tipo = '{type_lens}' AND "
-                                f"situation = 'Finalizado'")
-            lista = self.cursor.fetchall()
-            for val in lista:
-                self.listSearchServ.insert('', END, values=(val))
-            self.conn.close()
-            self.clear_listService()
+            self.connect_BD()
+            self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND "
+                                f"sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}'")
+            verif = self.cursor.fetchall()
+            if verif == []:
+                self.text_warning = 'SERVIÇO NÃO CADASTRADO'
+                self.warning()
+            else:
+                self.date_hour()
+                self.cursor.execute(f"UPDATE services SET data_id = '{self.date}', data = '{self.current_date}', "
+                                    f"situation = 'Finalizado' WHERE store = '{self.store_serviceEntryCapt}' "
+                                    f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}'")
+                self.conn.commit()
+                self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE "
+                                    f"data = '{self.current_date}' AND store = '{self.store_serviceEntryCapt}' "
+                                    f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}' AND "
+                                    f"situation = 'Finalizado'")
+                lista = self.cursor.fetchall()
+                for val in lista:
+                    self.listSearchServ.insert('', END, values=(val))
+                self.conn.close()
+                self.clear_listService()
 
     def pesq_Service(self):
         self.connect_BD()
@@ -987,6 +997,7 @@ class Interface(Funcs):
         self.frame_options = Frame(self.root, bd=-4, bg="#f0e68c", highlightbackground="#1c1c1c",
                                    highlightthickness=2)
         self.frame_options.place(relx=0.14, rely=0.21, relwidth=0.43, relheight=0.75)
+        print('Frame Options ativado')
 
     def logo(self):  # FRAME DO LOGO
         self.fontepadraoLogo = ('Miso', '40')
@@ -1011,7 +1022,7 @@ class Interface(Funcs):
         self.Ir.bind("<Leave>", self.saiu_de_cima)
         self.Ir.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER PARA CADASTRO DE LENTES
-    def option_Ir(self, arg):
+    def option_Ir(self, event=''):
         print("Botão 'ir' clicado!".title())
         self.verification_Code()
         self.captura_dados()
@@ -1028,7 +1039,7 @@ class Interface(Funcs):
         self.exitButton.bind("<Leave>", self.saiu_de_cima)
         self.exitButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER PARA RETIRAR LENTES
-    def option_ButtonExit(self, arg):
+    def option_ButtonExit(self, event=''):
         print("Botão 'ENTER/RETIRAR' clicado!")
         self.remove_LensAdd()
     #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -1043,7 +1054,7 @@ class Interface(Funcs):
         self.VisButton.bind("<Leave>", self.saiu_de_cima)
         self.VisButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER PARA VISUALIZAR LENTES
-    def option_ButtonVis(self,arg):
+    def option_ButtonVis(self, event=''):
         print("Botão 'ENTER/VISUALIZAR' clicado!")
         self.captura_dadosVis()
         self.option_VisLens()
@@ -1060,7 +1071,7 @@ class Interface(Funcs):
         self.lensZeroButton.bind("<Leave>", self.saiu_de_cima)
         self.lensZeroButton.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO ENTER DE BUSCAR LENTES ZERADAS
-    def option_ButtonBuscar(self, arg):
+    def option_ButtonBuscar(self, event=''):
         print("Botão 'ENTER/BUSCAR LENS ZERO' clicado!")
         self.captura_dadosLensZero()
         self.lensZero()
@@ -1076,7 +1087,7 @@ class Interface(Funcs):
         self.button_RegEn.bind("<Leave>", self.saiu_de_cima)
         self.button_RegEn.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO DE REGISTRAR LENTES
-    def option_ButtonReg(self, arg):
+    def option_ButtonReg(self, event=''):
         print("Botão 'ENTER/REGISTRO' clicado!")
         self.captura_dadosRegSaida()
         self.print_RegSaida()
@@ -1092,11 +1103,12 @@ class Interface(Funcs):
         self.RegServiceEnter.bind("<Leave>", self.saiu_de_cima)
         self.RegServiceEnter.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO DE REGISTRR SERVIÇOS
-    def option_RegServiceEnter(self, arg):
+    def option_RegServiceEnter(self, event=''):
         print("Botão 'ENTER/REGISTRO DE SERVIÇOS' clicado!")
         self.captura_dadosRegServico()
         self.recording_RegService()
         self.cont()
+        self.label_Cont()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1109,10 +1121,11 @@ class Interface(Funcs):
         self.AddService.bind("<Leave>", self.saiu_de_cima)
         self.AddService.place(relx=0.425, rely=0.947, relwidth=0.15, relheight=0.04)
     # FUNÇÃO DO BOTÃO DE ADICIONAR SERVIÇOS
-    def option_AddService(self, arg):
+    def option_AddService(self, event=''):
         print("Botão 'ENTER/ADICONAR SERVIÇOS' clicado!")
-        self.addServiceList()
+        self.captura_ListService()
         self.cont()
+        self.label_Cont()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1125,7 +1138,7 @@ class Interface(Funcs):
         self.pesqService.bind("<Leave>", self.saiu_de_cima)
         self.pesqService.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
     # FUNÇÃO DO BOTÃO DE PESQUISAR SERVIÇOS
-    def option_buttonPesqEnter(self, arg):
+    def option_buttonPesqEnter(self, event=''):
         print("Botão 'ENTER/PESQUISAR SERVIÇOS' clicado!")
         self.pesq_Capt()
         self.pesq_Service()
