@@ -151,9 +151,11 @@ class Funcs():
         self.seq_PesqCapt = self.seq_PesqEntry.get()
         verif.append(self.store_PesqCapt)
         verif.append(self.seq_PesqCapt)
-        if '' not in verif:
+        if '' in verif:
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
             self.warning()
+        else:
+            self.pesq_Service()
 # ==========================//=====================/MANIPULAÇÃO DE DADOS/==================//===========================
 
     def verification_Int(self):
@@ -421,8 +423,6 @@ class Funcs():
 
     def addServiceList(self):
         self.connect_BD()
-        print(f"SELECT * FROM services WHERE store = {self.store_serviceEntryCapt} AND sequencia = "
-                            f"{self.seq_serviceEntryCapt} AND tipo = {self.type_lens}")
         self.cursor.execute(f"SELECT * FROM services WHERE store = '{self.store_serviceEntryCapt}' AND sequencia = "
                             f"'{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}' AND situation = 'Finalizado'")
         verif = self.cursor.fetchall()
@@ -444,9 +444,7 @@ class Funcs():
                                     f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}'")
                 self.conn.commit()
                 self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE "
-                                    f"data = '{self.current_date}' AND store = '{self.store_serviceEntryCapt}' "
-                                    f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}' AND "
-                                    f"situation = 'Finalizado'")
+                                    f"data_id = '{self.date}' AND situation = 'Finalizado' ORDER BY data")
                 lista = self.cursor.fetchall()
                 for val in lista:
                     self.listSearchServ.insert('', END, values=(val))
@@ -892,7 +890,7 @@ class Funcs():
 
         self.listaRegService.place(relx=0.025, rely=0.26, relwidth=0.95, relheight=0.58)
 
-    def lista_searchService(self):
+    def lista_searchService(self, event=''):
         self.listSearchServ = ttk.Treeview(self.frame_services, height=3, columns=('col1', 'col2', 'col3', 'col4'))
         self.listSearchServ.heading('#0')
         self.listSearchServ.heading('col1', text='Loja')
@@ -909,15 +907,15 @@ class Funcs():
         self.listSearchServ.place(relx=0.025, rely=0.07, relwidth=0.948, relheight=0.87)
 
         # BARRA DE ROLAGEM
-        self.scroolbar = Scrollbar(self.listSearchServ, orient='vertical')
-        self.listSearchServ.configure(yscroll=self.scroolbar.set)
-        self.scroolbar.place(relx=0.967, rely=0.042, relwidth=0.03, relheight=0.956)
+        self.scrollLista = Scrollbar(self.listSearchServ, orient='vertical', jump=1)
+        self.listSearchServ.configure(yscrollcommand=self.scrollLista.set)
+        self.scrollLista.place(relx=0.967, rely=0.042, relwidth=0.03, relheight=0.956)
 
     def lista_Pesq(self):
         self.listaPesq = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5',
                                                                              'col6'))
         self.listaPesq.heading('#0')
-        self.listaPesq.heading('col1', text='Data')
+        self.listaPesq.heading('col1', text='Data e Hora')
         self.listaPesq.heading('col2', text='Tipo')
         self.listaPesq.heading('col3', text='Situação')
         self.listaPesq.heading('col4', text='Previsão')
@@ -1141,7 +1139,6 @@ class Interface(Funcs):
     def option_buttonPesqEnter(self, event=''):
         print("Botão 'ENTER/PESQUISAR SERVIÇOS' clicado!")
         self.pesq_Capt()
-        self.pesq_Service()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
