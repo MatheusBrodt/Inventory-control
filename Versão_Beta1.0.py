@@ -10,7 +10,6 @@ class Funcs():
     def date_Today(self):
         from datetime import date
         self.date = date.today()
-        print(self.date)
 
     def date_hour(self):
         from datetime import datetime
@@ -128,7 +127,6 @@ class Funcs():
         verif.append(self.store_serviceEntryCapt)
         verif.append(self.seq_serviceEntryCapt)
         verif.append(self.type_serviceEntryCapt)
-        print(verif)
         if '' in verif:
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
             self.warning()
@@ -444,7 +442,9 @@ class Funcs():
                                     f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}'")
                 self.conn.commit()
                 self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE "
-                                    f"data_id = '{self.date}' AND situation = 'Finalizado' ORDER BY data")
+                                    f"data = '{self.current_date}' AND store = '{self.store_serviceEntryCapt}' "
+                                    f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}' AND "
+                                    f"situation = 'Finalizado'")
                 lista = self.cursor.fetchall()
                 for val in lista:
                     self.listSearchServ.insert('', END, values=(val))
@@ -453,7 +453,7 @@ class Funcs():
 
     def pesq_Service(self):
         self.connect_BD()
-        self.cursor.execute(f"SELECT data, tipo, situation, previsao, obs, warrant FROM services WHERE "
+        self.cursor.execute(f"SELECT sequencia, data, tipo, situation, previsao, obs, warrant FROM services WHERE "
                             f"store = '{self.store_PesqCapt}' AND sequencia = '{self.seq_PesqCapt}'")
         lista = self.cursor.fetchall()
         if lista == []:
@@ -913,22 +913,24 @@ class Funcs():
 
     def lista_Pesq(self):
         self.listaPesq = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5',
-                                                                             'col6'))
+                                                                             'col6', 'col7'))
         self.listaPesq.heading('#0')
-        self.listaPesq.heading('col1', text='Data e Hora')
-        self.listaPesq.heading('col2', text='Tipo')
-        self.listaPesq.heading('col3', text='Situação')
-        self.listaPesq.heading('col4', text='Previsão')
-        self.listaPesq.heading('col5', text='Observação')
-        self.listaPesq.heading('col6', text='Garantia')
+        self.listaPesq.heading('col1', text='Seq.')
+        self.listaPesq.heading('col2', text='Data e Hora')
+        self.listaPesq.heading('col3', text='Tipo')
+        self.listaPesq.heading('col4', text='Situação')
+        self.listaPesq.heading('col5', text='Previsão')
+        self.listaPesq.heading('col6', text='Observação')
+        self.listaPesq.heading('col7', text='Garantia')
 
         self.listaPesq.column('#0', width=0)
-        self.listaPesq.column('col1', width=80)
-        self.listaPesq.column('col2', width=40)
-        self.listaPesq.column('col3', width=30)
-        self.listaPesq.column('col4', width=30)
-        self.listaPesq.column('col5', width=80)
-        self.listaPesq.column('col6', width=20)
+        self.listaPesq.column('col1', width=20)
+        self.listaPesq.column('col2', width=80)
+        self.listaPesq.column('col3', width=40)
+        self.listaPesq.column('col4', width=45)
+        self.listaPesq.column('col5', width=40)
+        self.listaPesq.column('col6', width=40)
+        self.listaPesq.column('col7', width=20)
 
         self.listaPesq.place(relx=0.025, rely=0.18, relwidth=0.95, relheight=0.65)
 
@@ -995,7 +997,6 @@ class Interface(Funcs):
         self.frame_options = Frame(self.root, bd=-4, bg="#f0e68c", highlightbackground="#1c1c1c",
                                    highlightthickness=2)
         self.frame_options.place(relx=0.14, rely=0.21, relwidth=0.43, relheight=0.75)
-        print('Frame Options ativado')
 
     def logo(self):  # FRAME DO LOGO
         self.fontepadraoLogo = ('Miso', '40')
