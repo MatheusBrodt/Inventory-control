@@ -1,21 +1,17 @@
-from tkinter import *
-from tkinter import ttk
-import mysql.connector
-
-obs = Tk()
+# =========================//======================/TELA DE OBSERVAÇÕES/======================//========================
 
 class Interface_Obs():
     def __init__(self):
+        self.obs = Tk()
         self.connect_BD()
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
-        self.obs = obs
         self.tela_obs()
         self.frame()
         self.funcs_Obs()
         self.button()
-        obs.mainloop()
+        self.Funcs.double_Click()
 
-    def connect_BD(self):
+    def connect_BD(self): # acho que aqui não precisa
         try:
             self.conn = mysql.connector.connect(host='localhost', user='root', password='', database="lab_carol")
             self.cursor = self.conn.cursor()
@@ -33,7 +29,7 @@ class Interface_Obs():
         self.obs.resizable(False, False)
         self.obs.configure(background='Blue')
 
-    def funcs_Obs(self):
+    def funcs_Obs(self, event=''):
         # LABELS
         self.situation = Label(self.frame_fundo, text='Situação:', bg='#ffd700', fg='black', font=self.fontepadrao)
         self.situation.place(relx=0.32, rely=0.10, relwidth=0.14, relheight=0.08)
@@ -58,7 +54,6 @@ class Interface_Obs():
 
     def option_Button(self, event=''):
         self.CaptDados()
-        quit()
 
     # EFEITOS NOS BOTÕES
     def passou_por_cima(self, event):
@@ -67,16 +62,17 @@ class Interface_Obs():
         event.widget.config(relief=RAISED)
 
     # CAPTURA DE DADOS
-    def CaptDados(self):
-        verif = []
+    def CaptDados_Obs(self):
         self.situationCapt = self.situationEntry.get()
-        self.textCapt = self.text.get()
+        self.textCapt = self.text.get('1.0')
 
     # MANIPULAÇÃO DE DADOS
     def insert_Obs(self):
-        self.cursor.execute(f"UPDATE services SET obs = '{self.textCapt}'")
+        print('')
 
     def alter_Sit(self):
         print('')
 
-Interface_Obs()
+    def start_Obs(self, event=''):
+        Interface_Obs()
+        print('Start')

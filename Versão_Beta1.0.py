@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import mysql.connector
+
 print('\033[31mRODANDO O PROGRAMA!\033[m')
 
 root = Tk()
@@ -97,13 +98,13 @@ class Funcs():
 
     def captura_dadosRegServico(self):  # CAPTURA OS DADOS DAS ENTRYS DO REGISTRO DE SERVIÇOS
         verif = []
-        self.store_RegServiceEntryCapt = self.store_RegServiceEntry.get()
-        self.seq_RegServiceEntryCapt = self.seq_RegServiceEntry.get()
-        self.tipo_RegServiceEntryCapt = self.tipo_RegServiceEntry.get()
-        self.sit_RegServiceEntryCapt = self.sit_RegServiceEntry.get()
-        self.prevDay_RegServiceEntryCapt = self.prevDay_RegServiceEntry.get()
-        self.prevMonth_RegServiceEntryCapt = self.prevMonth_RegServiceEntry.get()
-        self.prevYear_RegServiceEntryCapt = self.prevYear_RegServiceEntry.get()
+        self.store_RegServiceEntryCapt = str(self.store_RegServiceEntry.get()).strip()
+        self.seq_RegServiceEntryCapt = str(self.seq_RegServiceEntry.get()).strip()
+        self.tipo_RegServiceEntryCapt = str(self.tipo_RegServiceEntry.get()).strip()
+        self.sit_RegServiceEntryCapt = str(self.sit_RegServiceEntry.get()).strip()
+        self.prevDay_RegServiceEntryCapt = str(self.prevDay_RegServiceEntry.get()).strip()
+        self.prevMonth_RegServiceEntryCapt = str(self.prevMonth_RegServiceEntry.get()).strip()
+        self.prevYear_RegServiceEntryCapt = str(self.prevYear_RegServiceEntry.get()).strip()
         verif.append(self.store_RegServiceEntryCapt)
         verif.append(self.seq_RegServiceEntryCapt)
         verif.append(self.sit_RegServiceEntryCapt)
@@ -121,9 +122,9 @@ class Funcs():
 
     def captura_ListService(self):  # CAPTURA AS ENTRYS DA LISTA DE SERVIÇO
         verif = []
-        self.store_serviceEntryCapt = self.store_serviceEntry.get()
-        self.seq_serviceEntryCapt = self.seq_serviceEntry.get()
-        self.type_serviceEntryCapt = self.type_serviceEntry.get()
+        self.store_serviceEntryCapt = str(self.store_serviceEntry.get()).strip()
+        self.seq_serviceEntryCapt = str(self.seq_serviceEntry.get()).strip()
+        self.type_serviceEntryCapt = str(self.type_serviceEntry.get()).strip()
         verif.append(self.store_serviceEntryCapt)
         verif.append(self.seq_serviceEntryCapt)
         verif.append(self.type_serviceEntryCapt)
@@ -154,6 +155,12 @@ class Funcs():
             self.warning()
         else:
             self.pesq_Service()
+
+    def CaptDados_Obs(self):
+        self.situationCapt = self.situationEntry.get()
+        self.textCapt = self.text.get('1.0', '200.0')
+
+
 # ==========================//=====================/MANIPULAÇÃO DE DADOS/==================//===========================
 
     def verification_Int(self):
@@ -442,19 +449,21 @@ class Funcs():
                                     f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}'")
                 self.conn.commit()
                 self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE "
-                                    f"data = '{self.current_date}' AND store = '{self.store_serviceEntryCapt}' "
-                                    f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}' AND "
+                                    f"data_id = '{self.date}' AND "
                                     f"situation = 'Finalizado'")
                 lista = self.cursor.fetchall()
+                self.listSearchServ.delete(*self.listSearchServ.get_children())
                 for val in lista:
                     self.listSearchServ.insert('', END, values=(val))
+                self.text_warning = ''
+                self.warning()
                 self.conn.close()
                 self.clear_listService()
 
     def pesq_Service(self):
         self.connect_BD()
-        self.cursor.execute(f"SELECT sequencia, data, tipo, situation, previsao, obs, warrant FROM services WHERE "
-                            f"store = '{self.store_PesqCapt}' AND sequencia = '{self.seq_PesqCapt}'")
+        self.cursor.execute(f"SELECT store, sequencia, data, tipo, situation, previsao, obs, warrant FROM services WHERE "
+                            f"store = '{self.store_PesqCapt}' AND LOCATE('{self.seq_PesqCapt}', sequencia)")
         lista = self.cursor.fetchall()
         if lista == []:
             self.text_warning = 'SERVIÇO NÃO ENCONTRADO'
@@ -462,6 +471,8 @@ class Funcs():
         else:
             for val in lista:
                 self.listaPesq.insert('',  END, values=(val))
+            self.text_warning = ''
+            self.warning()
         self.conn.close()
 
     def cont(self):  # RESOLVENDO O BUG DA CONTAGEM DE SERVIÇOS
@@ -478,14 +489,33 @@ class Funcs():
         self.tot_M = f'{total_month[0]}'
         self.conn.close()
 
-
-
     def warning(self):
         self.font_warning = ('Verdana', 20, 'italic', 'bold')
         self.text_warning_Label = Label(self.frame_options, text=self.text_warning, font=self.font_warning,
                                         bg='#f0e68c', fg='red')
         self.text_warning_Label.place(relx=0.05, rely=0.84, relwidth=0.90, relheight=0.08)
 
+    def insert_Obs(self):
+        self.listaPesq.selection()
+        for dado in self.listaPesq.selection(): # INSERIR DADOS NAS ENTRYS DA OBS
+            col1, col2, col3, col4, col5, col6, col7, col8 = self.listaPesq.item(dado, 'values')
+            self.col1 = col1
+            self.col2 = col2
+            self.col4 = col4
+            self.situationEntry.insert(END, col5)
+            self.text.insert(END, col7)
+
+    def alter_Obs(self, event=''):
+        self.CaptDados_Obs()
+        self.date_hour()
+        self.connect_BD()
+        self.cursor.execute(f"UPDATE services SET situation = '{self.situationCapt}', obs = '{self.textCapt}', "
+                            f"data = '{self.current_date}' WHERE store = '{self.col1}' AND sequencia = '{self.col2}' "
+                            f"AND tipo = '{self.col4}'")
+        self.conn.commit()
+        self.conn.close()
+        self.lista_Pesq()
+        self.option_buttonPesqEnter()
 # ==========================//============================/LABELS/=========================//===========================
 
     def label_and_entry(self):
@@ -781,6 +811,22 @@ class Funcs():
         self.total_Day.place(relx=0.08, rely=0.945, relwidth=0.06, relheight=0.045)
         self.total_Month.place(relx=0.875, rely=0.945, relwidth=0.10, relheight=0.045)
 
+    def labelAlter_Status(self):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        # LABELS
+        self.situation = Label(self.frame_Obs, text='Situação:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        self.situation.place(relx=0.10, rely=0.09, relwidth=0.14, relheight=0.14)
+        self.observation = Label(self.frame_Obs, text='Observação', bg='#ffd700', fg='black', font=self.fontepadrao)
+        self.observation.place(relx=0.42, rely=0.30, relwidth=0.20, relheight=0.14)
+        # ENTRYS
+        self.situationEntry = ttk.Combobox(self.frame_Obs, font=self.fontepadrao)
+        self.situationEntry['values'] = ('Digitação', 'Aguardando', 'Montagem', 'Finalizado', 'Retrabalho')
+        self.situationEntry.place(relx=0.24, rely=0.09, relwidth=0.23, relheight=0.14)
+        self.situationEntry.bind("<Return>", self.alter_Obs)
+
+        self.text = Text(self.frame_Obs, font=self.fontepadrao, bg='white', highlightbackground="#1c1c1c",
+                                   highlightthickness=1)
+        self.text.place(relx=0.02, rely=0.30, relwidth=0.96, relheight=0.62)
 # ==========================//===========================/LISTAS/========================//=============================
 
     def listaFrame_Reg(self):
@@ -913,27 +959,29 @@ class Funcs():
 
     def lista_Pesq(self):
         self.listaPesq = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4', 'col5',
-                                                                             'col6', 'col7'))
+                                                                             'col6', 'col7', 'col8'))
         self.listaPesq.heading('#0')
-        self.listaPesq.heading('col1', text='Seq.')
-        self.listaPesq.heading('col2', text='Data e Hora')
-        self.listaPesq.heading('col3', text='Tipo')
-        self.listaPesq.heading('col4', text='Situação')
-        self.listaPesq.heading('col5', text='Previsão')
-        self.listaPesq.heading('col6', text='Observação')
-        self.listaPesq.heading('col7', text='Garantia')
+        self.listaPesq.heading('col1', text='Loja')
+        self.listaPesq.heading('col2', text='Seq.')
+        self.listaPesq.heading('col3', text='Data e Hora')
+        self.listaPesq.heading('col4', text='Tipo')
+        self.listaPesq.heading('col5', text='Situação')
+        self.listaPesq.heading('col6', text='Previsão')
+        self.listaPesq.heading('col7', text='Observação')
+        self.listaPesq.heading('col8', text='Garantia')
 
         self.listaPesq.column('#0', width=0)
-        self.listaPesq.column('col1', width=20)
-        self.listaPesq.column('col2', width=80)
-        self.listaPesq.column('col3', width=40)
-        self.listaPesq.column('col4', width=45)
-        self.listaPesq.column('col5', width=40)
+        self.listaPesq.column('col1', width=10)
+        self.listaPesq.column('col2', width=20)
+        self.listaPesq.column('col3', width=80)
+        self.listaPesq.column('col4', width=40)
+        self.listaPesq.column('col5', width=45)
         self.listaPesq.column('col6', width=40)
-        self.listaPesq.column('col7', width=20)
+        self.listaPesq.column('col7', width=40)
+        self.listaPesq.column('col8', width=20)
 
         self.listaPesq.place(relx=0.025, rely=0.18, relwidth=0.95, relheight=0.65)
-
+        self.listaPesq.bind('<Double-1>', self.Obs)
 # =============================//=======================/FRONT END/=======================//============================
 class Interface(Funcs):
 # ==========================//========================/INICIALIZAÇÃO/========================//=========================
@@ -1010,6 +1058,14 @@ class Interface(Funcs):
         self.logoText_3.place(relx=0.515, rely=0.03, relwidth=0.305, relheight=0.55)
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+    def Obs(self, event=''):
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        self.frame_Obs = Frame(self.frame_options, bd=-4, bg="#f0e68c", highlightbackground="#1c1c1c",
+                                   highlightthickness=2)
+        self.frame_Obs.place(relx=0.05, rely=0.50, relwidth=0.90, relheight=0.30)
+        self.labelAlter_Status()
+        self.button_Obs()
+        self.insert_Obs()
 # =========================//=========================/BOTÕES ENTER/========================//==========================
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     #  BOTÃO ENTER DE CADASTRO DE LENTES
@@ -1143,12 +1199,24 @@ class Interface(Funcs):
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # BOTÕES ENTER DA OBS
+    def button_Obs(self):
+        print('Caiu nobotão obs')
+        self.button_Enter = Button(self.frame_Obs, font=self.fontepadrao, text='Inserir', bg='#f0e68c',
+                                   command=self.alter_Obs)
+        self.button_Enter.bind('<Enter>', self.passou_por_cima)
+        self.button_Enter.bind('<Leave>', self.saiu_de_cima)
+        self.button_Enter.place(relx=0.80, rely=0.09, relwidth=0.15, relheight=0.14)
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # EFEITOS NSO BOTÕES
     def passou_por_cima(self, event):
         event.widget.config(relief=GROOVE)
     def saiu_de_cima(self, event):
         event.widget.config(relief=RAISED)
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 # =========================//============================/BOTÕES/===========================//==========================
 
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
