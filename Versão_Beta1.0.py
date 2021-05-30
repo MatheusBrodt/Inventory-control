@@ -380,7 +380,7 @@ class Funcs():
                 self.cursor.execute(f"SELECT sequencia FROM services WHERE store = '{self.store_RegServiceEntryCapt}' "
                                     f"AND sequencia = '{self.seq_RegServiceEntryCapt}'")
                 garantia = f'{self.seq_RegServiceEntryCapt}'
-                if 'G' in garantia or 'g' in garantia:
+                if '-G' in garantia or '-g' in garantia:
                     self.connect_BD()
                     self.date_hour()
                     self.cursor.execute(f"INSERT INTO services VALUES "
@@ -516,6 +516,79 @@ class Funcs():
         self.conn.close()
         self.lista_Pesq()
         self.option_buttonPesqEnter()
+
+# ==========================//============================/PDF/============================//===========================
+
+    def relatorio(self):
+        from reportlab.pdfgen import canvas
+
+        pdf = canvas.Canvas('C:/Users/mathe/Documents/Relatorio de Montagem Laboratório.pdf')
+        pdf.setFont('Times-Bold', 25)
+        # CABEÇALHO
+        pdf.setFont('Times-Bold', 25)
+        pdf.drawString(160, 810, 'Relatório De Montagem')
+
+        meses = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
+                 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
+
+        month = self.date.month
+        year = self.date.year
+        pdf.setFont('Times-Bold', 20)
+        pdf.drawString(90, 760, f"Relatório de montagem referente à {meses[month]} de {year}")
+
+        # LEVANTANDO DADOS DE MONTAGEM
+        lojas = ['2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226']
+        periodo = str(f"'{year}-{month}-1' AND '{year}-{month}-31'")
+        self.connect_BD()
+        space = 780
+        for loja in lojas:
+            space = space - 70
+            # TOTAL
+            self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE store = '{loja}' AND situation = 'Finalizado' AND "
+                                f"data_id BETWEEN {periodo} AND warrant = 'Não'")
+            total = self.cursor.fetchone()
+
+            # VS
+            self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE store = '{loja}' AND situation = 'Finalizado' AND "
+                                f" tipo = 'Visão Simples' AND data_id BETWEEN {periodo} AND warrant = 'Não'")
+            vs = self.cursor.fetchone()
+            # MULTI
+            self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE store = '{loja}' AND situation = 'Finalizado' AND "
+                                f" tipo = 'Multifocal' AND data_id BETWEEN {periodo} AND warrant = 'Não'")
+            multi = self.cursor.fetchone()
+            # GARANTIA
+            self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE store = '{loja}' AND situation = 'Finalizado' AND "
+                                f" warrant = 'Sim' AND data_id BETWEEN {periodo}")
+            warrant = self.cursor.fetchone()
+
+            pdf.setFont('Times-Bold', 16)
+            pdf.drawString(50, space, f"'{loja}' teve {total[0]} óculos montado;")
+            pdf.setFont('Times-Bold', 14)
+            pdf.drawString(50, space-20, f"{vs[0]} Visão Simples.  {multi[0]} Multifocais.  {warrant[0]} Garantia(s).")
+
+        # TOTAL DE MONTAGENS
+        self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE situation = 'Finalizado' AND warrant = 'Não' AND "
+                            f"data_id BETWEEN {periodo}")
+        tot_mes = self.cursor.fetchone()
+        # GARANTIAS
+        self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE situation = 'Finalizado' AND warrant = 'Sim' AND "
+                            f"data_id BETWEEN {periodo}")
+        tot_gar = self.cursor.fetchone()
+        pdf.setFont('Times-Bold', 20)
+        pdf.drawString(100, 50, f"Total de montagens no mês de {meses[month]}:")
+        pdf.setFont('Times-Bold', 16)
+        pdf.drawString(100, 30, f"{tot_mes[0]} Montagens e {tot_gar[0]} Garantias")
+
+        # RODAPE
+        pdf.setFont('Times-Bold', 9)
+        pdf.drawString(30, 5, f"Relatório gerado automaticamente pelo Sistema de Gestão de Laboratório de Montagem.")
+
+        self.cursor.close()
+        pdf.save()
+        self.text_warning = 'RELATÓRIO GERADO'
+        self.warning()
+        print('Relatorio Gerado com Sucesso!')
+
 # ==========================//============================/LABELS/=========================//===========================
 
     def label_and_entry(self):
@@ -1007,6 +1080,7 @@ class Interface(Funcs):
         self.lista_searchService()
         self.button_Selecionar()
         self.button_Pesq()
+        self.button_Rel()
         self.cont()
         self.label_Cont()
         root.mainloop()
@@ -1340,6 +1414,21 @@ class Interface(Funcs):
         self.label_Pesq()
         self.lista_Pesq()
         self.button_PesqEnter()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # BOTÃO RELATÓRIO
+    def button_Rel(self):
+        self.buttonRel = Button(self.frame_buttons, text='Relatório', bg='#c0c0c0', fg='black',
+                                command=self.option_ButtonRel)
+        self.buttonRel["font"] = ("Verdana", 10, "italic", "bold")
+        self.buttonRel.bind("<Enter>", self.passou_por_cima)
+        self.buttonRel.bind("<Leave>", self.saiu_de_cima)
+        self.buttonRel.place(relx=0.05, rely=0.87, relwidth=0.90, relheight=0.05)
+    def option_ButtonRel(self):
+        print('Botão Relatório Clicado!')
+        self.relatorio()
+
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
