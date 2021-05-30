@@ -1,3 +1,4 @@
+import datetime
 from tkinter import *
 from tkinter import ttk
 import mysql.connector
@@ -38,8 +39,8 @@ class Funcs():
 
     def clear_Exit(self):  # LIMPA AS ENTRYS DA REMOÇÃO DE LENTES
         self.codRemove_Capt = self.codBarrasEntry_Exit.delete(0, END)
-        self.store_Capt = self.storeEntry_Exit.delete(0, END)
-        self.seq_Capt = self.seqEntry_Exit.delete(0, END)
+        #self.store_Capt = self.storeEntry_Exit.delete(0, END)
+        #self.seq_Capt = self.seqEntry_Exit.delete(0, END)
 
     def clear_dadosVis(self):  # LIMPA OS DADOS DA VISUALIZAÇÃO DE LENTES
         self.spheClear_CaptVis = self.sphe_VisEntry.delete(0,END)
@@ -160,7 +161,18 @@ class Funcs():
         self.situationCapt = self.situationEntry.get()
         self.textCapt = self.text.get('1.0', '200.0')
 
-
+    def CaptDados_Rel(self):
+        from datetime import datetime
+        verif = []
+        self.per_iniEntrycapt = self.per_iniEntry.get()
+        self.per_fimEntryCapt = self.per_fimEntry.get()
+        verif.append(self.per_iniEntrycapt)
+        verif.append(self.per_fimEntryCapt)
+        if '' in verif:
+            self.text_warning = 'PREENCHA TODOS OS CAMPOS'
+            self.warning()
+        else:
+            self.relatorio()
 # ==========================//=====================/MANIPULAÇÃO DE DADOS/==================//===========================
 
     def verification_Int(self):
@@ -521,24 +533,33 @@ class Funcs():
 
     def relatorio(self):
         from reportlab.pdfgen import canvas
+        day = datetime.date.today().day
+        month = datetime.date.today().month
+        year = datetime.date.today().year
+        zero = '0'
+        if month > 9:
+            zero = ''
+        data = f'{day}/{zero}{month}/{year}'
+        print(data)
 
         pdf = canvas.Canvas('C:/Users/mathe/Documents/Relatorio de Montagem Laboratório.pdf')
         pdf.setFont('Times-Bold', 25)
         # CABEÇALHO
         pdf.setFont('Times-Bold', 25)
-        pdf.drawString(160, 810, 'Relatório De Montagem')
+        pdf.drawString(200, 810, 'Laboratório Carol')
 
         meses = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
                  9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
+        resp = {2064:'Jéssica', 1432:'Priscila', 2007:'Gisele', 1518:'Carmen', 1571:'Mônica', 1744:'Bruna', 1574:'Aline',
+                1648:'Milene', 2226:'Vivi'}
 
-        month = self.date.month
-        year = self.date.year
         pdf.setFont('Times-Bold', 20)
         pdf.drawString(90, 760, f"Relatório de montagem referente à {meses[month]} de {year}")
 
+        # >>>>>> ARRUMAR PARA PEGAR A REFERENCIA DA TELA
         # LEVANTANDO DADOS DE MONTAGEM
         lojas = ['2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226']
-        periodo = str(f"'{year}-{month}-1' AND '{year}-{month}-31'")
+        periodo = str(f"'{self.per_iniEntrycapt}' AND '{self.per_fimEntryCapt}'")
         self.connect_BD()
         space = 780
         for loja in lojas:
@@ -562,9 +583,11 @@ class Funcs():
             warrant = self.cursor.fetchone()
 
             pdf.setFont('Times-Bold', 16)
-            pdf.drawString(50, space, f"'{loja}' teve {total[0]} óculos montado;")
+            pdf.drawString(50, space, f"Loja: {loja} - Responsável. {resp[int(loja)]}")
             pdf.setFont('Times-Bold', 14)
-            pdf.drawString(50, space-20, f"{vs[0]} Visão Simples.  {multi[0]} Multifocais.  {warrant[0]} Garantia(s).")
+            pdf.drawString(50, space-20, f"Total: {total[0]} óculos montados.")
+            pdf.setFont('Times-Bold', 14)
+            pdf.drawString(50, space-35, f"{vs[0]} Visão Simples.  {multi[0]} Multifocais.  {warrant[0]} Garantia(s).")
 
         # TOTAL DE MONTAGENS
         self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE situation = 'Finalizado' AND warrant = 'Não' AND "
@@ -582,6 +605,7 @@ class Funcs():
         # RODAPE
         pdf.setFont('Times-Bold', 9)
         pdf.drawString(30, 5, f"Relatório gerado automaticamente pelo Sistema de Gestão de Laboratório de Montagem.")
+        pdf.drawString(525, 5, data)
 
         self.cursor.close()
         pdf.save()
@@ -900,6 +924,23 @@ class Funcs():
         self.text = Text(self.frame_Obs, font=self.fontepadrao, bg='white', highlightbackground="#1c1c1c",
                                    highlightthickness=1)
         self.text.place(relx=0.02, rely=0.30, relwidth=0.96, relheight=0.62)
+
+    def label_Rel(self):
+        self.options()
+        self.fontepadrao = ("Verdana", 10, "italic", 'bold')
+        # LABELS
+        self.per_ini = Label(self.frame_options, text='Data Início:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        self.per_fim = Label(self.frame_options, text='Data Fim:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        # ENTRYS
+        self.per_iniEntry = Entry(self.frame_options, font=self.fontepadrao)
+        self.per_iniEntry.bind('<Return>', self.option_EnterRel)
+        self.per_fimEntry = Entry(self.frame_options, font=self.fontepadrao)
+        self.per_fimEntry.bind('<Return>', self.option_EnterRel)
+        # LACOALIZAÇÃO
+        self.per_ini.place(relx=0.103, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.per_fim.place(relx=0.549, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.per_iniEntry.place(relx=0.265, rely=0.03, relwidth=0.17, relheight=0.045)
+        self.per_fimEntry.place(relx=0.70, rely=0.03, relwidth=0.17, relheight=0.045)
 # ==========================//===========================/LISTAS/========================//=============================
 
     def listaFrame_Reg(self):
@@ -1275,7 +1316,6 @@ class Interface(Funcs):
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # BOTÕES ENTER DA OBS
     def button_Obs(self):
-        print('Caiu nobotão obs')
         self.button_Enter = Button(self.frame_Obs, font=self.fontepadrao, text='Inserir', bg='#f0e68c',
                                    command=self.alter_Obs)
         self.button_Enter.bind('<Enter>', self.passou_por_cima)
@@ -1284,7 +1324,20 @@ class Interface(Funcs):
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # EFEITOS NSO BOTÕES
+    # BOTÃO ENTER DE RELATÓRIO
+    def button_EnterRel(self):
+        self.EnterRel = Button(self.frame_options, font=self.fontepadrao, text='Relatório', bg='#f0e68c',
+                               command=self.option_EnterRel)
+        self.EnterRel.bind('<Enter>', self.passou_por_cima)
+        self.EnterRel.bind('<Leave>', self.saiu_de_cima)
+        self.EnterRel.place(relx=0.425, rely=0.92, relwidth=0.15, relheight=0.05)
+    def option_EnterRel(self, event=''):
+        print('Botão ENTER RELATÓRIO clicado!')
+        self.CaptDados_Rel()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # EFEITOS NOS BOTÕES
     def passou_por_cima(self, event):
         event.widget.config(relief=GROOVE)
     def saiu_de_cima(self, event):
@@ -1427,7 +1480,8 @@ class Interface(Funcs):
         self.buttonRel.place(relx=0.05, rely=0.87, relwidth=0.90, relheight=0.05)
     def option_ButtonRel(self):
         print('Botão Relatório Clicado!')
-        self.relatorio()
+        self.label_Rel()
+        self.button_EnterRel()
 
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
