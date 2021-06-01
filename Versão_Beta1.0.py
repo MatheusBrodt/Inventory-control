@@ -20,7 +20,8 @@ class Funcs():
 
     def connect_BD(self):
         try:
-            self.conn = mysql.connector.connect(host='localhost', user='root', password='', database="lab_carol")
+            self.conn = mysql.connector.connect(host='mysqlserver.cz1ji5phheqm.us-east-2.rds.amazonaws.com',
+                                                user='Lab_carolSL', password='mb028001', database="lab_carol")
             self.cursor = self.conn.cursor()
             print('Conectado no BD')
         except mysql.connector.errors.ProgrammingError:  # AJUSTAR EXCESSÃO DE ERRO
