@@ -495,7 +495,7 @@ class Funcs():
         total_day = self.cursor.fetchone()
         self.tot_D = f'{total_day[0]}'
         per_inic = f'{self.date.year}-{self.date.month}-01'
-        per_end = f'{self.date.year}-{self.date.month}-31'
+        per_end = f'{self.date.year}-{self.date.month}-{self.date.day}'
         self.cursor.execute(f"SELECT COUNT(data_id) FROM services WHERE data_id BETWEEN '{per_inic}' AND '{per_end}' "
                             f"AND situation = 'Finalizado'")
         total_month = self.cursor.fetchone()
@@ -537,13 +537,16 @@ class Funcs():
         day = datetime.date.today().day
         month = datetime.date.today().month
         year = datetime.date.today().year
-        zero = '0'
+        zero_day = '0'
+        zero_month = '0'
         if month > 9:
-            zero = ''
-        data = f'{day}/{zero}{month}/{year}'
+            zero_month = ''
+        if day > 9:
+            zero_day = ''
+        data = f'{zero_day}{day}/{zero_month}{month}/{year}'
         print(data)
 
-        pdf = canvas.Canvas('C:/Users/mathe/Documents/Relatorio de Montagem Laboratório.pdf')
+        pdf = canvas.Canvas('C:/Users/Public/Documents/Relatorio de Montagem Laboratório.pdf')
         pdf.setFont('Times-Bold', 25)
         # CABEÇALHO
         pdf.setFont('Times-Bold', 25)
@@ -1493,7 +1496,6 @@ class Interface(Funcs):
         self.Sair["font"] = ("Verdana", 10, "italic", "bold")
         self.Sair.bind("<Enter>", self.passou_por_cima)
         self.Sair.bind("<Leave>", self.saiu_de_cima)
-        self.Sair["command"] = quit
         self.Sair.place(relx=0.05, rely=0.93, relwidth=0.90, relheight=0.05)
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
