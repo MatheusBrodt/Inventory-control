@@ -476,7 +476,7 @@ class Funcs():
 
     def pesq_Service(self):
         self.connect_BD()
-        self.cursor.execute(f"SELECT store, sequencia, data, tipo, situation, previsao, obs, warrant FROM services WHERE "
+        self.cursor.execute(f"SELECT store, sequencia, data, tipo, situation, previsao, obs, status FROM services WHERE "
                             f"store = '{self.store_PesqCapt}' AND LOCATE('{self.seq_PesqCapt}', sequencia)")
         lista = self.cursor.fetchall()
         if lista == []:
@@ -1091,7 +1091,7 @@ class Funcs():
         self.listaPesq.heading('col5', text='Situação')
         self.listaPesq.heading('col6', text='Previsão')
         self.listaPesq.heading('col7', text='Observação')
-        self.listaPesq.heading('col8', text='Garantia')
+        self.listaPesq.heading('col8', text='Status')
 
         self.listaPesq.column('#0', width=0)
         self.listaPesq.column('col1', width=10)
