@@ -361,9 +361,18 @@ class Funcs():
             self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
             result = self.cursor.fetchone()
             if result is not None and result[0] > 0:
-                self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
+                self.cursor.execute(f"SELECT COUNT(*) FROM reserve WHERE store = '{self.store_Capt}' AND "
+                                    f"cod_barras = '{self.codRemove_Capt}'")
+                uni = self.cursor.fetchone()
+                if uni[0] > 0:  # SE A LENTE ESTIVER RESERVADA
+                    self.cursor.execute(f"DELETE FROM reserve WHERE store = '{self.store_Capt}' "
+                                        f"AND cod_barras = '{self.codRemove_Capt}' LIMIT 1")
+                else:  # SE A LENTE NÃO ESTIVER RESERVADA
+                    self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
+
+                # INSERE NA TABELA DE RETIRADA DE LENTES
                 self.cursor.execute(f"INSERT INTO lens VALUES "
-                                    f"('', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
+                                    f"('0', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
                                     f"'{self.seq_Capt}', '{self.reason_Capt}')")
                 self.conn.commit()
                 dados = (self.codRemove_Capt, self.store_Capt, self.seq_Capt, self.reason_Capt)
@@ -400,7 +409,7 @@ class Funcs():
                                         f"('{self.date}', DEFAULT, '{self.current_date}', "
                                         f"'{self.store_RegServiceEntryCapt}', '{self.seq_RegServiceEntryCapt}', "
                                         f"'{self.tipo_RegServiceEntryCapt}', '{self.sit_RegServiceEntryCapt}', "
-                                        f"'{previsao}', '', 'Sim')")
+                                        f"'{previsao}', '', 'Sim', '')")
                     self.conn.commit()
                     self.text_warning = 'GARANTIA ADICIONADA'
                     self.warning()
@@ -420,7 +429,7 @@ class Funcs():
                                             f"('{self.date}', DEFAULT, '{self.current_date}', "
                                             f"'{self.store_RegServiceEntryCapt}', '{self.seq_RegServiceEntryCapt}', "
                                             f"'{self.tipo_RegServiceEntryCapt}', '{self.sit_RegServiceEntryCapt}', "
-                                            f"'{previsao}', '', DEFAULT)")
+                                            f"'{previsao}', '', DEFAULT, '')")
                         self.conn.commit()
                         self.text_warning = 'SERVIÇO ADICIONADO'
                         self.warning()
@@ -530,6 +539,58 @@ class Funcs():
         self.conn.close()
         self.lista_Pesq()
         self.option_buttonPesqEnter()
+
+    def reserve(self, event=''):
+        data = self.date
+        self.unitCapt = self.unit.get()
+        self.store_ReservCapt = self.store_Reserv.get()
+        if self.unitCapt == '':
+            self.text_warning = '** DIGITE QUANTAS LENTES **'
+            self.warning()
+        else:
+            uniCapt = True
+        if self.store_ReservCapt == '':
+            self.text_warning = '** DIGITE A LOJA **'
+            self.warning()
+        else:
+            store = True
+
+        if uniCapt is True and store is True:
+            self.listaCli.selection()
+            for dado in self.listaCli.selection():
+                col1, col2, col3, col4, col5, col6, col7 = self.listaCli.item(dado, 'values')
+                sphe = col1  # esférico
+                cylin = col2  # cilindro
+                add = col3  # adição
+                eye = col4  # olho
+                mat = col5  # material
+                lab = col6  # laboratório
+                uni = col7  # unidades
+            if int(self.unitCapt) > int(uni):
+                self.text_warning = f'* NÃO É POSSÍVEL RESERVAR {self.unitCapt} LENTES! *'
+                self.warning()
+            else:
+                self.text_warning = ''
+                self.warning()
+                self.connect_BD()
+                # BUSCA O CÓDIGO DE BARRAS
+                self.cursor.execute(f"SELECT cod_barras FROM stock WHERE spherical = '{sphe}' AND cylindrical = '{cylin}' "
+                                    f"AND adicao = '{add}' AND eye = '{eye}' AND material = '{mat}' AND "
+                                    f"laboratory = '{lab}'")
+                cod_barras = self.cursor.fetchone()
+                # RETIRA A LENTE DO ESTOQUE
+                self.cursor.execute(f"UPDATE stock SET amount = amount-{self.unitCapt} WHERE spherical = '{sphe}' AND "
+                                    f"cylindrical = '{cylin}' AND adicao = '{add}' AND eye = '{eye}' AND "
+                                    f"material = '{mat}' AND laboratory = '{lab}'")
+                # INSERE NA RESERVA
+                for reserve in range(int(self.unitCapt)):
+                    self.cursor.execute(f"INSERT INTO reserve VALUES "
+                                        f"('{data}', '{self.store_ReservCapt}', '{cod_barras[0]}')")
+                self.conn.commit()
+                self.conn.close()
+                self.Double_frame.destroy()
+                self.text_warning = '** RESERVADO **'
+                self.warning()
 
 # ==========================//============================/PDF/============================//===========================
 
@@ -950,6 +1011,28 @@ class Funcs():
         self.per_fim.place(relx=0.549, rely=0.03, relwidth=0.17, relheight=0.045)
         self.per_iniEntry.place(relx=0.265, rely=0.03, relwidth=0.17, relheight=0.045)
         self.per_fimEntry.place(relx=0.70, rely=0.03, relwidth=0.17, relheight=0.045)
+
+    def double_ClickReserv(self, event=''):
+        fonte_DoubleClick = ("Verdana", 12, "italic", 'bold')
+        self.Double_frame = Frame(self.frame_options, bd=-4, bg="#ffd700", highlightbackground="#1c1c1c",
+                                  highlightthickness=2)
+        self.Double_frame.place(relx=0.40, rely=0.50, relwidth=0.20, relheight=0.20)
+        label_reserv = Label(self.Double_frame, text='Reservar', font=fonte_DoubleClick, bg='#ffd700', fg='#0000cd')
+        label_reserv.place(relx=0.05, rely=0.045, relwidth=0.90, relheight=0.15)
+
+        label_store = Label(self.Double_frame, text='Loja', font=fonte_DoubleClick, bg='#ffd700', fg='#0000cd')
+        label_store.place(relx=0.05, rely=0.48, relwidth=0.90, relheight=0.15)
+
+        fonte_Entry = ("Verdana", 10, "italic", 'bold')
+        self.unit = ttk.Combobox(self.Double_frame, font=fonte_Entry)
+        self.unit['values'] = ('1', '2', '3', '4', '5')
+        self.unit.bind('<Return>', self.reserve)
+        self.unit.place(relx=0.20, rely=0.23, relwidth=0.60, relheight=0.19)
+
+        self.store_Reserv = ttk.Combobox(self.Double_frame, font=fonte_Entry)
+        self.store_Reserv['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.store_Reserv.bind('<Return>', self.reserve)
+        self.store_Reserv.place(relx=0.20, rely=0.68, relwidth=0.60, relheight=0.19)
 # ==========================//===========================/LISTAS/========================//=============================
 
     def listaFrame_Reg(self):
@@ -1037,6 +1120,7 @@ class Funcs():
         self.listaCli.column('col7', width=20)
 
         self.listaCli.place(relx=0.025, rely=0.26, relwidth=0.95, relheight=0.58)
+        self.listaCli.bind('<Double-1>', self.double_ClickReserv)
 
     def lista_RegService(self):
         self.listaRegService = ttk.Treeview(self.frame_options, height=3, columns=('col1', 'col2', 'col3', 'col4',
