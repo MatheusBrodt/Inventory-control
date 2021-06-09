@@ -458,7 +458,8 @@ class Funcs():
             else:
                 self.date_hour()
                 self.cursor.execute(f"UPDATE services SET data_id = '{self.date}', data = '{self.current_date}', "
-                                    f"situation = 'Finalizado' WHERE store = '{self.store_serviceEntryCapt}' "
+                                    f"situation = 'Finalizado', status = 'Em Rota' "
+                                    f"WHERE store = '{self.store_serviceEntryCapt}' "
                                     f"AND sequencia = '{self.seq_serviceEntryCapt}' AND tipo = '{self.type_lens}'")
                 self.conn.commit()
                 self.cursor.execute(f"SELECT store, sequencia, tipo, warrant FROM services WHERE "
@@ -648,9 +649,11 @@ class Funcs():
         self.lab_Entry['values'] = ('Farol', 'Haytek', 'Zeiss')
         self.lab_Entry.bind("<Return>", self.option_Ir)
         self.mat_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.mat_Entry['values'] = ('CR/AR 1.50', 'CR/AR 1.56', 'CR/AR BLUE 1.56', 'POLI/AR 1.59', 'POLI/AR BLUE 1.59',
-                                    'CR/AR 1.56 Progressiva', 'Zeiss 1.50 Platinum', 'Zeiss 1.50 BlueProtect',
-                                    'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
+        self.mat_Entry['values'] = ('Lente Vis Simples 1.50 c/A.R.', 'Lente Vis Simples 1.56 c/A.R.',
+                                    'Lente V.S. 1.56 Filtro Azul c/A.R.', 'Lente Vis Simp 1.59 Poly c/A.R.',
+                                    'Lente Vis Simp 1.59 Poly Filtro Azul c/A.R.', 'Lente Ac. Progressiva 1.56 c/A.R.',
+                                    'Zeiss 1.50 Platinum', 'Zeiss 1.50 BlueProtect', 'Zeiss 1.50 Silver',
+                                    'Zeiss 1.50 Photo')
         self.mat_Entry.bind("<Return>", self.option_Ir)
         self.add_Entry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.add_Entry['values'] = ('1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '3.25',
@@ -729,9 +732,11 @@ class Funcs():
                                               '-4.00')
         self.cylinEntry_LensZero.bind("<Return>", self.option_ButtonBuscar)
         self.matEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.matEntry_LensZero['values'] = ('CR/AR 1.50', 'CR/AR 1.56', 'CR/AR BLUE 1.56', 'POLI/AR 1.59',
-                                            'POLI/AR BLUE 1.59', 'CR/AR 1.56 Progressiva', 'Zeiss 1.50 Platinum',
-                                            'Zeiss 1.50 BlueProtect', 'Zeiss 1.50 Silver', 'Zeiss 1.50 Photo')
+        self.matEntry_LensZero['values'] = ('Lente Vis Simples 1.50 c/A.R.', 'Lente Vis Simples 1.56 c/A.R.',
+                                    'Lente V.S. 1.56 Filtro Azul c/A.R.', 'Lente Vis Simp 1.59 Poly c/A.R.',
+                                    'Lente Vis Simp 1.59 Poly Filtro Azul c/A.R.', 'Lente Ac. Progressiva 1.56 c/A.R.',
+                                    'Zeiss 1.50 Platinum', 'Zeiss 1.50 BlueProtect', 'Zeiss 1.50 Silver',
+                                    'Zeiss 1.50 Photo')
         self.matEntry_LensZero.bind("<Return>", self.option_ButtonBuscar)
         self.labEntry_LensZero = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.labEntry_LensZero['values'] = ('Farol', 'Haytek', 'Zeiss')
