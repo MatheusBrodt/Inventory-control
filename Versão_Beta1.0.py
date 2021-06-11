@@ -889,7 +889,7 @@ class Funcs():
         self.tipo_RegServiceEntry['values'] = ('Visão Simples', 'Multifocal', 'Bifocal')
         self.tipo_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.sit_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.sit_RegServiceEntry['values'] = ('Digitação', 'Aguardando', 'Montagem', 'Finalizado', 'Retrabalho')
+        self.sit_RegServiceEntry['values'] = ('Digitação', 'Aguardando', 'Montagem', 'Retrabalho')
         self.sit_RegServiceEntry.current(1)
         self.sit_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.prevDay_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
