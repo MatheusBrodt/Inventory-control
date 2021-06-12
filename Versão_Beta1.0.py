@@ -263,6 +263,9 @@ class Funcs():
         try:
             if int(self.codigo_Capt) in self.codigos:  # SE JA EXISTIR O CÓDIGO CADASTRADO
                 self.insert_Dados(event='')
+                self.warning()
+                self.Print_bar()
+                self.bar_Progress()
                 self.cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {self.codigo_Capt}")
                 self.conn.commit()
                 #  ADICIONANDO NA LISTA DE EXIBIÇÃO
@@ -360,16 +363,12 @@ class Funcs():
             self.connect_BD()
             self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
             result = self.cursor.fetchone()
-            if result is not None and result[0] > 0:
-                self.cursor.execute(f"SELECT COUNT(*) FROM reserve WHERE store = '{self.store_Capt}' AND "
-                                    f"cod_barras = '{self.codRemove_Capt}'")
-                uni = self.cursor.fetchone()
-                if uni[0] > 0:  # SE A LENTE ESTIVER RESERVADA
-                    self.cursor.execute(f"DELETE FROM reserve WHERE store = '{self.store_Capt}' "
-                                        f"AND cod_barras = '{self.codRemove_Capt}' LIMIT 1")
-                else:  # SE A LENTE NÃO ESTIVER RESERVADA
-                    self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
-
+            self.cursor.execute(f"SELECT COUNT(*) FROM reserve WHERE store = '{self.store_Capt}' AND "
+                                f"cod_barras = '{self.codRemove_Capt}'")
+            uni = self.cursor.fetchone()
+            if uni[0] > 0:  # SE A LENTE ESTIVER RESERVADA
+                self.cursor.execute(f"DELETE FROM reserve WHERE store = '{self.store_Capt}' "
+                                    f"AND cod_barras = '{self.codRemove_Capt}' LIMIT 1")
                 # INSERE NA TABELA DE RETIRADA DE LENTES
                 self.cursor.execute(f"INSERT INTO lens VALUES "
                                     f"('0', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
@@ -382,10 +381,24 @@ class Funcs():
                 self.warning()
                 self.clear_Exit()
                 print('\033[31mINSERIDA NA TABELA DE SAÍDA DE LENTES!\033[m')
-            else:
-                self.text_warning = 'LENTE NÃO EXISTE'
-                self.warning()
-                print('\033[31mNÃO EXISTE A LENTE NO ESTOQUE\033[m')
+            else:  # SE A LENTE NÃO ESTIVER RESERVADA
+                if result is not None and result[0] > 0:
+                    self.cursor.execute(f"UPDATE stock SET amount = amount-1 WHERE cod_barras = {self.codRemove_Capt}")
+                    # INSERE NA TABELA DE RETIRADA DE LENTES
+                    self.cursor.execute(f"INSERT INTO lens VALUES "
+                                        f"('0', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
+                                        f"'{self.seq_Capt}', '{self.reason_Capt}')")
+                    self.conn.commit()
+                    dados = (self.codRemove_Capt, self.store_Capt, self.seq_Capt, self.reason_Capt)
+                    self.lista_Exit.insert('', END, values=(dados))
+                    self.conn.close()
+                    self.text_warning = 'LENTE RETIRADA'
+                    self.warning()
+                    self.clear_Exit()
+                    print('\033[31mINSERIDA NA TABELA DE SAÍDA DE LENTES!\033[m')
+                else:
+                    self.text_warning = 'LENTE NÃO EXISTE'
+                    self.warning()
 
     def recording_RegService(self):
         from datetime import datetime
@@ -541,6 +554,8 @@ class Funcs():
         self.option_buttonPesqEnter()
 
     def reserve(self, event=''):
+        uniCapt = False
+        store = False
         data = self.date
         self.unitCapt = self.unit.get()
         self.store_ReservCapt = self.store_Reserv.get()
@@ -586,6 +601,9 @@ class Funcs():
                 for reserve in range(int(self.unitCapt)):
                     self.cursor.execute(f"INSERT INTO reserve VALUES "
                                         f"('{data}', '{self.store_ReservCapt}', '{cod_barras[0]}')")
+                # APAGA DA LISTA DE EXIBIÇÃO
+                item = self.listaCli.selection()
+                self.listaCli.delete(item)
                 self.conn.commit()
                 self.conn.close()
                 self.Double_frame.destroy()
@@ -1435,6 +1453,20 @@ class Interface(Funcs):
         event.widget.config(relief=GROOVE)
     def saiu_de_cima(self, event):
         event.widget.config(relief=RAISED)
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # BARRA DE PROGRESSO
+    def bar_Progress(self, event=''):
+        from time import sleep
+        for i in range(20):
+            self.frame_principal.update_idletasks()
+            self.pb1['value'] += 20
+            sleep(0.1)
+
+    def Print_bar(self, event=''):
+        self.pb1 = ttk.Progressbar(self.frame_principal, orient=HORIZONTAL, length=200, mode='determinate')
+        self.pb1.place(relx=0.25, rely=0.41, relwidth=0.50, relheight=0.05)
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 # =========================//============================/BOTÕES/===========================//==========================
