@@ -1,7 +1,7 @@
 import sys
 from cx_Freeze import setup, Executable
 
-build_exe_options = {'packages': ['os'], 'includes': ['tkinter', 'mysql', 'reportlab']}
+build_exe_options = {'packages': ['os'], 'includes': ['tkinter', 'mysql', 'reportlab'],'include_msvcr' : True}
 
 base = None
 if sys.platform == 'win32':

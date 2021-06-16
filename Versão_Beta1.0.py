@@ -263,9 +263,6 @@ class Funcs():
         try:
             if int(self.codigo_Capt) in self.codigos:  # SE JA EXISTIR O CÓDIGO CADASTRADO
                 self.insert_Dados(event='')
-                self.warning()
-                self.Print_bar()
-                self.bar_Progress()
                 self.cursor.execute(f"UPDATE stock SET amount = amount+{1} WHERE cod_barras = {self.codigo_Capt}")
                 self.conn.commit()
                 #  ADICIONANDO NA LISTA DE EXIBIÇÃO
@@ -610,6 +607,12 @@ class Funcs():
                 self.text_warning = '** RESERVADO **'
                 self.warning()
 
+    def smash(self):
+        self.CaptDados_Obs()
+        self.cursor.execute(f"SELECT SUM(price) FROM smash WHERE data_id BETWEEN '{self.per_iniEntrycapt}' AND "
+                            f"'{self.per_fimEntryCapt}'")
+        self.cursor.fetchall()
+
 # ==========================//============================/PDF/============================//===========================
 
     def relatorio(self):
@@ -697,7 +700,66 @@ class Funcs():
         self.warning()
         print('Relatorio Gerado com Sucesso!')
 
-# ==========================//============================/LABELS/=========================//===========================
+    def rel_smash(self):
+        from reportlab.pdfgen import canvas
+        day = datetime.date.today().day
+        month = datetime.date.today().month
+        year = datetime.date.today().year
+        zero_day = '0'
+        zero_month = '0'
+        if month > 9:
+            zero_month = ''
+        if day > 9:
+            zero_day = ''
+        data = f'{zero_day}{day}/{zero_month}{month}/{year}'
+        print(data)
+
+        pdf = canvas.Canvas('C:/Users/Public/Documents/Relatorio de Quebra Laboratório.pdf')
+        pdf.setFont('Times-Bold', 25)
+        # CABEÇALHO
+        pdf.setFont('Times-Bold', 25)
+        pdf.drawString(200, 810, 'Laboratório Carol')
+
+        meses = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
+                 9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
+        resp = {2064: 'Jéssica', 1432: 'Priscila', 2007: 'Gisele', 1518: 'Carmen', 1571: 'Mônica', 1744: 'Bruna',
+                1574: 'Aline',
+                1648: 'Milene', 2226: 'Vivi'}
+
+        pdf.setFont('Times-Bold', 20)
+        pdf.drawString(90, 760, f"Relatório de quebra referente à {meses[month]} de {year}")
+        # TOTAL
+        print(f"SELECT SUM(price) FROM smash WHERE data_id BETWEEN '2021-06-01' AND "
+              f"'2021-06-31'")
+        self.connect_BD()
+        self.cursor.execute(f"SELECT SUM(price) FROM smash WHERE data_id BETWEEN '2021-06-01' AND "
+                            f"'2021-06-31'")
+
+        total = self.cursor.fetchone()
+        total = f'{total}'.replace('.', ',')
+        total = str(total)
+        total = f'{total:.2f}'
+
+
+
+
+
+        # TOTAL
+        pdf.setFont('Times-Bold', 20)
+        pdf.drawString(90, 50, f"Total de qubras: ")
+        pdf.drawString(90, 30, f"Total do custo em quebras: R$ {total}")
+
+        # RODAPE
+        pdf.setFont('Times-Bold', 9)
+        pdf.drawString(30, 5, f"Relatório gerado automaticamente pelo Sistema de Gestão de Laboratório de Montagem.")
+        pdf.drawString(525, 5, data)
+        self.cursor.close()
+        pdf.save()
+        self.text_warning = 'RELATÓRIO GERADO'
+        self.warning()
+        print('Relatorio Gerado com Sucesso!')
+
+    # ==========================//============================/LABELS/=========================//===========================
 
     def label_and_entry(self):
         self.options()
@@ -1307,7 +1369,6 @@ class Interface(Funcs):
         print("Botão 'ir' clicado!".title())
         self.verification_Code()
         self.captura_dados()
-        self.button_Ir()
     #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1597,7 +1658,7 @@ class Interface(Funcs):
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # BOTÃO RELATÓRIO
     def button_Rel(self):
-        self.buttonRel = Button(self.frame_buttons, text='Relatório', bg='#c0c0c0', fg='black',
+        self.buttonRel = Button(self.frame_buttons, text='R. Montagem', bg='#c0c0c0', fg='black',
                                 command=self.option_ButtonRel)
         self.buttonRel["font"] = ("Verdana", 10, "italic", "bold")
         self.buttonRel.bind("<Enter>", self.passou_por_cima)
@@ -1613,7 +1674,7 @@ class Interface(Funcs):
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     #  BOTÃO DE SAIR
     def button_Sair(self):
-        self.Sair = Button(self.frame_buttons, text="Sair", bg="#c0c0c0", fg="black")
+        self.Sair = Button(self.frame_buttons, text="R. Quebra", bg="#c0c0c0", fg="black", command=self.rel_smash)
         self.Sair["font"] = ("Verdana", 10, "italic", "bold")
         self.Sair.bind("<Enter>", self.passou_por_cima)
         self.Sair.bind("<Leave>", self.saiu_de_cima)
