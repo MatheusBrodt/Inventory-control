@@ -360,11 +360,13 @@ class Funcs():
             self.connect_BD()
             self.cursor.execute(f"SELECT amount FROM stock WHERE cod_barras = {self.codRemove_Capt}")
             result = self.cursor.fetchone()
-            self.cursor.execute(f"SELECT COUNT(*) FROM reserve WHERE store = '{self.store_Capt}' AND "
+            self.cursor.execute(f"SELECT COUNT(*) FROM reserve WHERE store = '{self.store_Capt}' "
+                                f"OR store = '0001' OR store = '0002' AND "
                                 f"cod_barras = '{self.codRemove_Capt}'")
             uni = self.cursor.fetchone()
             if uni[0] > 0:  # SE A LENTE ESTIVER RESERVADA
                 self.cursor.execute(f"DELETE FROM reserve WHERE store = '{self.store_Capt}' "
+                                    f"OR store = '0001' OR store = '0002' "
                                     f"AND cod_barras = '{self.codRemove_Capt}' LIMIT 1")
                 # INSERE NA TABELA DE RETIRADA DE LENTES
                 self.cursor.execute(f"INSERT INTO lens VALUES "
@@ -906,7 +908,8 @@ class Funcs():
         self.codBarrasEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.codBarrasEntry_Exit.bind("<Return>", self.option_ButtonExit)
         self.storeEntry_Exit = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.storeEntry_Exit['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.storeEntry_Exit['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', '2322'
+                                          , 'LAB')
         self.storeEntry_Exit.bind("<Return>", self.option_ButtonExit)
         self.seqEntry_Exit = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.seqEntry_Exit.bind("<Return>", self.option_ButtonExit)
@@ -937,7 +940,8 @@ class Funcs():
         self.data_FimEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.data_FimEntry.bind("<Return>", self.option_ButtonReg)
         self.store_RegEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.store_RegEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.store_RegEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', '2322',
+                                         'LAB')
         self.store_RegEntry.bind("<Return>", self.option_ButtonReg)
         # LOCALIZAÇÃO DAS LABELS
         self.data_Inicio.place(relx=0.02, rely=0.03, relwidth=0.17, relheight=0.045)
@@ -961,7 +965,8 @@ class Funcs():
         self.prevYear_RegService = Label(self.frame_options, text='Ano', font=self.fontepadrao, bg='#f0e68c')
         # ENTRYS
         self.store_RegServiceEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.store_RegServiceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.store_RegServiceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226',
+                                                '2322')
         self.store_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
         self.seq_RegServiceEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.seq_RegServiceEntry.bind("<Return>", self.option_RegServiceEnter)
@@ -1014,7 +1019,7 @@ class Funcs():
         self.type_service = Label(self.frame_services, text='Tipo:', font=self.fontepadrao, bg='#ffd700')
         # ENTRYS
         self.store_serviceEntry = ttk.Combobox(self.frame_services, font=self.fontepadrao)
-        self.store_serviceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.store_serviceEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', '2322')
         self.store_serviceEntry.bind("<Return>", self.option_AddService)
         self.seq_serviceEntry = Entry(self.frame_services, font=self.fontepadrao, bg='white')
         self.seq_serviceEntry.bind("<Return>", self.option_AddService)
@@ -1036,7 +1041,7 @@ class Funcs():
         self.seq_Pesq = Label(self.frame_options, text='Sequência:', font=self.fontepadrao, bg='#f0e68c')
         # ENTRYS
         self.store_PesqEntry = ttk.Combobox(self.frame_options, font=self.fontepadrao)
-        self.store_PesqEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226')
+        self.store_PesqEntry['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', '2322')
         self.store_PesqEntry.bind("<Return>", self.option_buttonPesqEnter)
         self.seq_PesqEntry = Entry(self.frame_options, font=self.fontepadrao, bg='white')
         self.seq_PesqEntry.bind("<Return>", self.option_buttonPesqEnter)
@@ -1110,7 +1115,7 @@ class Funcs():
         self.unit.place(relx=0.20, rely=0.23, relwidth=0.60, relheight=0.19)
 
         self.store_Reserv = ttk.Combobox(self.Double_frame, font=fonte_Entry)
-        self.store_Reserv['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', 'LAB')
+        self.store_Reserv['values'] = ('2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', '2322', 'LAB')
         self.store_Reserv.bind('<Return>', self.reserve)
         self.store_Reserv.place(relx=0.20, rely=0.68, relwidth=0.60, relheight=0.19)
 # ==========================//===========================/LISTAS/========================//=============================
