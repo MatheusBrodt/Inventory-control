@@ -365,9 +365,8 @@ class Funcs():
                                 f"cod_barras = '{self.codRemove_Capt}'")
             uni = self.cursor.fetchone()
             if uni[0] > 0:  # SE A LENTE ESTIVER RESERVADA
-                self.cursor.execute(f"DELETE FROM reserve WHERE store = '{self.store_Capt}' "
-                                    f"OR store = '0001' OR store = '0002' "
-                                    f"AND cod_barras = '{self.codRemove_Capt}' LIMIT 1")
+                self.cursor.execute(f"DELETE FROM reserve WHERE cod_barras = '{self.codRemove_Capt}' AND "
+                                    f"store = '{self.store_Capt}' OR store = '1' OR store = '2' LIMIT 1")
                 # INSERE NA TABELA DE RETIRADA DE LENTES
                 self.cursor.execute(f"INSERT INTO lens VALUES "
                                     f"('0', '{self.date}', '{self.codRemove_Capt}', '{self.store_Capt}', "
