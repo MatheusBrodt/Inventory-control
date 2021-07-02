@@ -1,6 +1,8 @@
 import datetime
 from tkinter import *
 from tkinter import ttk
+
+import MySQLdb
 import mysql.connector
 
 print('\033[31mRODANDO O PROGRAMA!\033[m')
@@ -20,8 +22,8 @@ class Funcs():
 
     def connect_BD(self):
         try:
-            self.conn = mysql.connector.connect(host='localhost',
-                                                user='root', password='', database="lab_carol")
+            self.conn = mysql.connector.connect(host='mysqlserver.cz1ji5phheqm.us-east-2.rds.amazonaws.com',
+                                                user='Lab_carolSL', password='mb028001', database="lab_carol")
             self.cursor = self.conn.cursor()
             print('Conectado no BD')
         except mysql.connector.errors.ProgrammingError:  # AJUSTAR EXCESSÃO DE ERRO
@@ -59,12 +61,12 @@ class Funcs():
         self.type_serviceEntryRem = self.type_serviceEntry.delete(0, END)
 
     def clear_smash(self):
-        self.smash_LensCapt.delete(0, END)
-        self.smash_eyeCapt.delete(0, END)
-        self.smash_labCapt.delete(0, END)
-        self.smash_reasonCapt.delete(0, END)
-        self.smash_priceCapt.delete(0, END)
-        self.smash_respCapt.delete(0, END)
+        self.smash_LensDelete = self.smash_Lens.delete(0, END)
+        self.smash_eyeDelete = self.smash_eye.delete(0, END)
+        self.smash_labDelete = self.smash_lab.delete(0, END)
+        self.smash_reasonDelete = self.smash_reason.delete(0, END)
+        self.smash_priceDelete = self.smash_price.delete(0, END)
+        self.smash_respDelete = self.smash_resp.delete(0, END)
 
 # ==========================//====================/CAPTURA DE DADOS/====================//=============================
 
@@ -189,8 +191,10 @@ class Funcs():
         self.smash_eyeCapt = self.smash_eye.get()
         self.smash_labCapt = self.smash_lab.get()
         self.smash_reasonCapt = self.smash_reason .get()
-        self.smash_priceCapt = self.smash_price.get()
+        self.smash_priceCapt = str(self.smash_price.get()).replace(',', '.')
         self.smash_respCapt = self.smash_resp.get()
+        self.per_initSmashCapt = self.per_initSmash.get()
+        self.per_endSmashCapt = self.per_endSmash.get()
 
         verif.append(self.smash_respCapt)
         verif.append(self.smash_respCapt)
@@ -198,12 +202,19 @@ class Funcs():
         verif.append(self.smash_respCapt)
         verif.append(self.smash_respCapt)
         verif.append(self.smash_respCapt)
+        verif.append(self.per_initSmashCapt)
+        verif.append(self.per_endSmashCapt)
 
         if '' in verif:
             self.text_warning = 'PREENCHA TODOS OS CAMPOS'
             self.warning()
+            self.validate = False
         else:
-            pass
+            self.validate = True
+
+    def CaptPerSmash(self):
+        self.initSmashCapt = self.per_initSmash.get()
+        self.endSmashCapt = self.per_endSmash.get()
 
     # ==========================//=====================/MANIPULAÇÃO DE DADOS/==================//===========================
 
@@ -639,115 +650,130 @@ class Funcs():
                 self.text_warning = '** RESERVADO **'
                 self.warning()
 
-    def smash(self):
+    def cont_service(self):
+        self.CaptPerSmash()
         self.connect_BD()
-        zero = '0'
-        if self.date.month > 9:
-            zero = ''
 
-        data_init = f"{self.date.year}-{zero}{self.date.month}-01"
+        self.cursor.execute(f"SELECT COUNT(data_id) FROM services WHERE data_id BETWEEN '{self.initSmashCapt}' AND "
+                            f"'{self.endSmashCapt}' AND situation = 'Finalizado'")
+        self.tot_ServPer = self.cursor.fetchone()[0]
+
+    def smash(self):  # INSERE AS QUEBRAS NA LISTA
+        self.connect_BD()
+        self.CaptPerSmash()
 
         self.cursor.execute(f"SELECT lens, eye, laboratory, reason, price, resp FROM smash "
-              f"WHERE data_id BETWEEN '{data_init}' AND '{self.date}'")
+              f"WHERE data_id BETWEEN '{self.initSmashCapt}' AND '{self.endSmashCapt}'")
         smashs = self.cursor.fetchall()
+        self.lista_Smash.delete(*self.lista_Smash.get_children())
         for smash in smashs:
             self.lista_Smash.insert('', END, values=(smash))
 
         self.conn.close()
 
-    def smash_Rel(self):
+    def smash_Rel(self):  # EMITI O RELATÓRIO DE QUEBRA DO PERIODO SELECIONADO
+        self.cont_service()
+        self.CaptPerSmash()
         self.connect_BD()
+        self.cursor.execute(f"SELECT COUNT(data_id) FROM smash WHERE data_id BETWEEN '{self.initSmashCapt}' AND "
+                            f"'{self.endSmashCapt}'")
+        result = self.cursor.fetchone()
 
-        zero = '0'
-        if self.date.month > 9:
-            zero = ''
+        if result[0] > 0:
+            self.connect_BD()
+            self.CaptPerSmash()
+            self.cont_service()
 
-        data_init = f"{self.date.year}-{zero}{self.date.month}-01"
+            # VALOR
+            self.cursor.execute(f"SELECT SUM(price) FROM smash WHERE data_id BETWEEN '{self.initSmashCapt}' AND "
+                                f"'{self.endSmashCapt}'")
+            valor = self.cursor.fetchone()
+            self.price_smash = f'{valor[0]:.2f}'  # VALOR DE QUEBRA EM REAIS
 
-        # VALOR
-        self.cursor.execute(f"SELECT SUM(price) FROM smash WHERE data_id BETWEEN '{data_init}' AND '{self.date}'")
-        valor = self.cursor.fetchone()
-        self.price_smash = f'{valor[0]:.2f}'  # VALOR DE QUEBRA EM REAIS
+            # QUANTIDADE TOTAL DE QUEBRAS
+            cont = 0
+            self.cursor.execute(f"SELECT eye FROM smash WHERE data_id BETWEEN '{self.initSmashCapt}' AND "
+                                f"'{self.endSmashCapt}'")
+            quant = self.cursor.fetchall()
+            for i in quant:
+                if i[0] == 'AO':
+                    cont = cont + 2
+                else:
+                    cont = cont + 1
+            self.tot_smash = cont  # TOTAL DE QUEBRAS
 
-        # QUANTIDADE
-        cont = 0
-        self.cursor.execute(f"SELECT eye FROM smash WHERE data_id BETWEEN '{data_init}' AND '{self.date}'")
-        quant = self.cursor.fetchall()
-        for i in quant:
-            if i[0] == 'AO':
-                cont = cont + 2
-            else:
-                cont = cont + 1
-        self.tot_smash = cont  # TOTAL DE QUEBRAS
+            # QUANTIDADE POR MONTADOR 1
+            self.cursor.execute(f"SELECT eye FROM smash WHERE data_id BETWEEN '{self.initSmashCapt}' AND "
+                                f"'{self.endSmashCapt}' AND resp = 'Matheus'")
+            var = self.cursor.fetchall()
+            cont_Mon1 = 0
+            for m in var:
+                if m[0] == 'AO':
+                    cont_Mon1 = cont_Mon1 + 2
+                else:
+                    cont_Mon1 = cont_Mon1 + 1
+            self.cont_Mon1 = cont_Mon1  # QUANTIDADE DE QUEBRA DO MONTADOR 1
 
-        # QUANTIDADE POR MONTADOR 1
-        self.cursor.execute(f"SELECT eye FROM smash WHERE data_id BETWEEN '{data_init}' AND '{self.date}' AND "
-                            f"resp = 'Matheus'")
-        var = self.cursor.fetchall()
-        cont_Mon1 = 0
-        for m in var:
-            if m[0] == 'AO':
-                cont_Mon1 = cont_Mon1 + 2
-            else:
-                cont_Mon1 = cont_Mon1 + 1
-        self.cont_Mon1 = cont_Mon1  # QUANTIDADE DE QUEBRA DO MONTADOR 1
+            # QUANTIDADE POR MONTADOR 2
+            self.cursor.execute(f"SELECT eye FROM smash WHERE data_id BETWEEN '{self.initSmashCapt}' AND "
+                                f"'{self.endSmashCapt}' AND resp = 'Alisson'")
+            var = self.cursor.fetchall()
+            cont_Mon2 = 0
+            for a in var:
+                if a[0] == 'AO':
+                    cont_Mon2 = cont_Mon2 + 2
+                else:
+                    cont_Mon2 = cont_Mon2 + 1
+            self.cont_Mon2 = cont_Mon2  # QUANTIDADE DE QUEBRA DO MONTADOR 2
 
-        # QUANTIDADE POR MONTADOR 2
-        self.cursor.execute(f"SELECT eye FROM smash WHERE data_id BETWEEN '{data_init}' AND '{self.date}' AND "
-                            f"resp = 'Alisson'")
-        var = self.cursor.fetchall()
-        cont_Mon2 = 0
-        for a in var:
-            if a[0] == 'AO':
-                cont_Mon2 = cont_Mon2 + 2
-            else:
-                cont_Mon2 = cont_Mon2 + 1
-        self.cont_Mon2 = cont_Mon2  # QUANTIDADE DE QUEBRA DO MONTADOR 2
+            # PERCENTUAL DE QUEBRA
+            tot_services = int(self.tot_ServPer) * 2
+            percent = tot_services / 100
 
+            value_percent = int(cont) / percent
+            self.percent_smash = (f'{value_percent:.2f} %')  # PORCENTAGEM DE QUEBRA
 
-        # PERCENTUAL DE QUEBRA
-        tot_services = int(self.tot_M) * 2
-        percent = tot_services / 100
-        value_percent = int(cont) / percent
-        self.percent_smash = (f'{value_percent:.2f} %')  # PORCENTAGEM DE QUEBRA
+            # VALOR GASTO EM QUEBRA POR MONTAGEM
+            self.gqm = f'{float(self.price_smash) / int(self.tot_ServPer):.2f}'
 
-        # VALOR GASTO EM QUEBRA POR MONTAGEM
-        self.gqm = f'{float(self.price_smash) / int(self.tot_M):.2f}'
+            self.conn.close()
+            self.rel_smash()
+        else:
+            self.text_warning = 'NÃO TEM REGISTRO DE QUEBRA'
+            self.warning()
 
-        self.conn.close()
-        self.rel_smash()
-
-    def insert_smash(self):
-        self.connect_BD()
+    def insert_smash(self):  # INSERE UMA NOVA QUEBRA NO BANCO DE DADOS
         self.CaptDados_Smash()
-
-        try:
-            self.cursor.execute(f"INSERT INTO smash VALUES ('{self.date}', '{self.smash_LensCapt}', '{self.smash_eyeCapt}', "
-                                f"'{self.smash_labCapt}', '{self.smash_reasonCapt}', '{self.smash_priceCapt}', "
-                                f"'{self.smash_respCapt}'")
-            self.text_warning = 'QUEBRA ADIOCIONADA'
-            self.warning()
-            self.clear_smash()
-            self.conn.commit()
-        except:
-            self.text_warning = 'ERRO AO ADICIONAR QUEBRA'
-            self.warning()
-        self.conn.close()
+        if self.validate:
+            self.connect_BD()
+            try:
+                self.cursor.execute(f"INSERT INTO smash VALUES ('{self.date}', '{self.smash_LensCapt}', '{self.smash_eyeCapt}', "
+                                    f"'{self.smash_labCapt}', '{self.smash_reasonCapt}', '{self.smash_priceCapt}', "
+                                    f"'{self.smash_respCapt}')")
+                self.text_warning = 'QUEBRA ADIOCIONADA'
+                self.warning()
+                self.clear_smash()
+                self.conn.commit()
+            except MySQLdb.Error:
+                self.text_warning = 'ERRO AO ADICIONAR QUEBRA'
+                self.warning()
+            self.conn.close()
 
 # ==========================//============================/PDF/============================//===========================
 
     def relatorio(self):
         from reportlab.pdfgen import canvas
         day = datetime.date.today().day
-        month = datetime.date.today().month
+        month = str(self.per_iniEntrycapt)
+        month = month[5] + month[6]
         year = datetime.date.today().year
         zero_day = '0'
         zero_month = '0'
-        if month > 9:
+        if int(month) > 9:
             zero_month = ''
         if day > 9:
             zero_day = ''
-        data = f'{zero_day}{day}/{zero_month}{month}/{year}'
+        data = f'{zero_day}{day}/{zero_month}{int(month)}/{year}'
         print(data)
 
         pdf = canvas.Canvas('C:/Users/Public/Documents/Relatorio de Montagem Laboratório.pdf')
@@ -762,7 +788,7 @@ class Funcs():
                 1648:'Milene', 2226:'Vivi'}
 
         pdf.setFont('Times-Bold', 20)
-        pdf.drawString(90, 760, f"Relatório de montagem referente à {meses[month]} de {year}")
+        pdf.drawString(90, 760, f"Relatório de montagem referente à {meses[int(month)]} de {year}")
 
         # >>>>>> ARRUMAR PARA PEGAR A REFERENCIA DA TELA
         # LEVANTANDO DADOS DE MONTAGEM
@@ -806,7 +832,7 @@ class Funcs():
                             f"data_id BETWEEN {periodo}")
         tot_gar = self.cursor.fetchone()
         pdf.setFont('Times-Bold', 20)
-        pdf.drawString(100, 50, f"Total de montagens no mês de {meses[month]}:")
+        pdf.drawString(100, 50, f"Total de montagens no mês de {meses[int(month)]}:")
         pdf.setFont('Times-Bold', 16)
         pdf.drawString(100, 30, f"{tot_mes[0]} Montagens e {tot_gar[0]} Garantias")
 
@@ -824,16 +850,17 @@ class Funcs():
     def rel_smash(self):
         from reportlab.pdfgen import canvas
         day = datetime.date.today().day
-        month = datetime.date.today().month
+        month = str(self.initSmashCapt)
+        month = month[5] + month[6]
+
         year = datetime.date.today().year
         zero_day = '0'
         zero_month = '0'
-        if month > 9:
+        if int(month) > 9:
             zero_month = ''
         if day > 9:
             zero_day = ''
-        data = f'{zero_day}{day}/{zero_month}{month}/{year}'
-        print(data)
+        data = f'{zero_day}{day}/{zero_month}{int(month)}/{year}'
 
         pdf = canvas.Canvas('C:/Users/Public/Documents/Relatorio de Quebra Laboratório.pdf')
         pdf.setFont('Times-Bold', 25)
@@ -848,11 +875,11 @@ class Funcs():
                 1648: 'Milene', 2226: 'Vivi'}
 
         pdf.setFont('Times-Bold', 20)
-        pdf.drawString(90, 760, f"Relatório de quebra referente à {meses[month]} de {year}")
+        pdf.drawString(90, 760, f"Relatório de quebra referente à {meses[int(month)]} de {year}")
 
         pdf.setFont('Times-Bold', 18)
-        pdf.drawString(50, 680, f"Total de montagens incluindo as garantias:  {self.tot_M}")
-        pdf.drawString(50, 640, f"Total de quebras:  {self.tot_smash}")
+        pdf.drawString(50, 680, f"Total de montagens incluindo as garantias:  {self.tot_M} ocúlos.")
+        pdf.drawString(50, 640, f"Total de quebras:  {self.tot_smash} lentes.")
         pdf.drawString(50, 600, f'Custo em quebras:  R$ {self.price_smash}')
         pdf.drawString(50, 560, f"Porcentagem de quebras:  {self.percent_smash}")
         pdf.drawString(50, 520, f"Custo em quebras por serviços finalizados:  {self.gqm}")
@@ -860,8 +887,8 @@ class Funcs():
         pdf.setFont('Times-Bold', 20)
         pdf.drawString(50, 470, f"Quebras por montador:")
         pdf.setFont('Times-Bold', 18)
-        pdf.drawString(50, 430, f"○ Alisson: {self.cont_Mon2}")
-        pdf.drawString(50, 410, f"○ Matheus: {self.cont_Mon1}")
+        pdf.drawString(50, 430, f"○ Alisson:  {self.cont_Mon2} lentes.")
+        pdf.drawString(50, 410, f"○ Matheus:  {self.cont_Mon1} lentes.")
 
         # RODAPE
         pdf.setFont('Times-Bold', 9)
@@ -1235,39 +1262,40 @@ class Funcs():
         self.fontepadrao = ("Verdana", 10, "italic", 'bold')
         self.options()
         self.list_Smash()
-        self.smash()
         self.button_EnterRelSmash()
+        self.button_EnterVisSmash()
+        self.button_EnterInsertSmash()
 
-        per_init = Label(self.frame_options, text='Início:', bg='white', fg='black', font=self.fontepadrao)
-        per_end = Label(self.frame_options, text='Fim:', bg='white', fg='black', font=self.fontepadrao)
-        lens = Label(self.frame_options, text='Lente:', bg='white', fg='black', font=self.fontepadrao)
-        eye = Label(self.frame_options, text='Olho:', bg='white', fg='black', font=self.fontepadrao)
-        lab = Label(self.frame_options, text='Laboratório:', bg='white', fg='black', font=self.fontepadrao)
-        reason = Label(self.frame_options, text='Motivo:', bg='white', fg='black', font=self.fontepadrao)
-        price = Label(self.frame_options, text='Preço:', bg='white', fg='black', font=self.fontepadrao)
-        resp = Label(self.frame_options, text='Responsável:', bg='white', fg='black', font=self.fontepadrao)
+        per_init = Label(self.frame_options, text='Início:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        per_end = Label(self.frame_options, text='Fim:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        lens = Label(self.frame_options, text='Lente:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        eye = Label(self.frame_options, text='Olho:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        lab = Label(self.frame_options, text='Laboratório:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        reason = Label(self.frame_options, text='Motivo:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        price = Label(self.frame_options, text='Preço:', bg='#f0e68c', fg='black', font=self.fontepadrao)
+        resp = Label(self.frame_options, text='Responsável:', bg='#f0e68c', fg='black', font=self.fontepadrao)
 
         self.smash_Lens = Entry(self.frame_options, font=self.fontepadrao)
-        self.smash_Lens.bind('<Return>')
+        self.smash_Lens.bind('<Return>', self.option_EnterInsertSmash)
 
         self.smash_eye = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.smash_eye['values'] = ('OD', 'OE', 'AO')
-        self.smash_eye.bind('<Retunr>')
+        self.smash_eye.bind('<Return>', self.option_EnterInsertSmash)
 
         self.smash_lab = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.smash_lab['values'] = ('Haytek', 'Farol', 'Grow', 'Forla', 'Zeiss')
-        self.smash_lab.bind('<Retunr>')
+        self.smash_lab.bind('<Return>', self.option_EnterInsertSmash)
 
         self.smash_reason = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.smash_reason['values'] = ('Lasca', 'Dioptria Errada', 'Modelo Errado', 'Risco')
-        self.smash_reason.bind('<Retunr>')
+        self.smash_reason.bind('<Return>', self.option_EnterInsertSmash)
 
         self.smash_price = Entry(self.frame_options, font=self.fontepadrao)
-        self.smash_price.bind('<Return>')
+        self.smash_price.bind('<Return>', self.option_EnterInsertSmash)
 
         self.smash_resp = ttk.Combobox(self.frame_options, font=self.fontepadrao)
         self.smash_resp['values'] = ('Alisson', 'Matheus')
-        self.smash_resp.bind('<Retunr>')
+        self.smash_resp.bind('<Return>', self.option_EnterInsertSmash)
 
         self.per_initSmash = Entry(self.frame_options, font=self.fontepadrao)
         self.per_endSmash = Entry(self.frame_options, font=self.fontepadrao)
@@ -1721,6 +1749,32 @@ class Interface(Funcs):
     def option_EnterRelSmash(self, event=''):
         print('Botão ENTER RELATÓRIO QUEBRA clicado!')
         self.smash_Rel()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # BOTÃO ENTER VISUALIZAR QUEBRAS
+    def button_EnterVisSmash(self):
+        self.EnterRelSmash = Button(self.frame_options, font=self.fontepadrao, text='Visualizar', bg='#f0e68c',
+                                    command=self.option_EnterVisSmash)
+        self.EnterRelSmash.bind('<Enter>', self.passou_por_cima)
+        self.EnterRelSmash.bind('<Leave>', self.saiu_de_cima)
+        self.EnterRelSmash.place(relx=0.225, rely=0.92, relwidth=0.15, relheight=0.05)
+
+    def option_EnterVisSmash(self, event=''):
+        print('Botão ENTER VISUALIZAR QUEBRAS clicado!')
+        self.smash()
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    # BOTÃO ENTER INSERIR QUEBRAS
+    def button_EnterInsertSmash(self):
+        self.EnterRelSmash = Button(self.frame_options, font=self.fontepadrao, text='Inserir', bg='#f0e68c',
+                                    command=self.option_EnterInsertSmash)
+        self.EnterRelSmash.bind('<Enter>', self.passou_por_cima)
+        self.EnterRelSmash.bind('<Leave>', self.saiu_de_cima)
+        self.EnterRelSmash.place(relx=0.625, rely=0.92, relwidth=0.15, relheight=0.05)
+
+    def option_EnterInsertSmash(self, event=''):
+        print('Botão ENTER INSERIR QUEBRA clicado!')
+        self.insert_smash()
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
