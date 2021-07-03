@@ -784,20 +784,20 @@ class Funcs():
 
         meses = {1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril', 5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
                  9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'}
-        resp = {2064:'Jéssica', 1432:'Priscila', 2007:'Gisele', 1518:'Carmen', 1571:'Mônica', 1744:'Bruna', 1574:'Aline',
-                1648:'Milene', 2226:'Vivi'}
+        resp = {2064:'Milene', 1432:'Verônica', 2007:'Gisele', 1518:'Suelen', 1571:'Mônica', 1744:'Bruna', 1574:'Aline',
+                1648:'Carmen', 2226:'Vivi', 2322:'Nanci'}
 
         pdf.setFont('Times-Bold', 20)
         pdf.drawString(90, 760, f"Relatório de montagem referente à {meses[int(month)]} de {year}")
 
         # >>>>>> ARRUMAR PARA PEGAR A REFERENCIA DA TELA
         # LEVANTANDO DADOS DE MONTAGEM
-        lojas = ['2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226']
+        lojas = ['2064', '1432', '2007', '1518', '1571', '1744', '1574', '1648', '2226', '2322']
         periodo = str(f"'{self.per_iniEntrycapt}' AND '{self.per_fimEntryCapt}'")
         self.connect_BD()
         space = 780
         for loja in lojas:
-            space = space - 70
+            space = space - 65
             # TOTAL
             self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE store = '{loja}' AND situation = 'Finalizado' AND "
                                 f"data_id BETWEEN {periodo} AND warrant = 'Não'")
@@ -818,10 +818,10 @@ class Funcs():
 
             pdf.setFont('Times-Bold', 16)
             pdf.drawString(50, space, f"Loja: {loja} - Responsável. {resp[int(loja)]}")
-            pdf.setFont('Times-Bold', 14)
-            pdf.drawString(50, space-20, f"Total: {total[0]} óculos montados.")
-            pdf.setFont('Times-Bold', 14)
-            pdf.drawString(50, space-35, f"{vs[0]} Visão Simples.  {multi[0]} Multifocais.  {warrant[0]} Garantia(s).")
+            pdf.setFont('Times-Bold', 13)
+            pdf.drawString(65, space-20, f"Total: {total[0]} óculos montados.")
+            pdf.setFont('Times-Bold', 13)
+            pdf.drawString(65, space-35, f"{vs[0]} Visão Simples.  {multi[0]} Multifocais.  {warrant[0]} Garantia(s).")
 
         # TOTAL DE MONTAGENS
         self.cursor.execute(f"SELECT COUNT(*) FROM services WHERE situation = 'Finalizado' AND warrant = 'Não' AND "
@@ -878,7 +878,7 @@ class Funcs():
         pdf.drawString(90, 760, f"Relatório de quebra referente à {meses[int(month)]} de {year}")
 
         pdf.setFont('Times-Bold', 18)
-        pdf.drawString(50, 680, f"Total de montagens incluindo as garantias:  {self.tot_M} ocúlos.")
+        pdf.drawString(50, 680, f"Total de montagens incluindo as garantias:  {self.tot_ServPer} ocúlos.")
         pdf.drawString(50, 640, f"Total de quebras:  {self.tot_smash} lentes.")
         pdf.drawString(50, 600, f'Custo em quebras:  R$ {self.price_smash}')
         pdf.drawString(50, 560, f"Porcentagem de quebras:  {self.percent_smash}")
@@ -889,6 +889,14 @@ class Funcs():
         pdf.setFont('Times-Bold', 18)
         pdf.drawString(50, 430, f"○ Alisson:  {self.cont_Mon2} lentes.")
         pdf.drawString(50, 410, f"○ Matheus:  {self.cont_Mon1} lentes.")
+
+        # OBS
+        pdf.setFont('Times-Bold', 20)
+        pdf.drawString(50, 375, f'Observações:')
+        pdf.setFont('Times-Bold', 16)
+        pdf.drawString(58, 360, f'A porcentagem de quebras é calculada sobre o número de montagens  ')
+        pdf.drawString(58, 344, f'multiplicado por dois, calculando a porcentagem sobre o número de ')
+        pdf.drawString(58, 329, f'lentes recortadas.')
 
         # RODAPE
         pdf.setFont('Times-Bold', 9)
