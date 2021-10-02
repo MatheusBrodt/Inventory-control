@@ -462,6 +462,7 @@ class Funcs():
                     else:
                         self.text_warning = 'SERVIÇO JÁ EXISTE'
                         self.warning()
+                        print('')
             else:
                 self.text_warning = 'PREVISÃO INVÁLIDA'
                 self.warning()
