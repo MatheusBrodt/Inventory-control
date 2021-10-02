@@ -479,6 +479,7 @@ class Funcs():
             self.text_warning= 'SERVIÇO JÁ FINALIZADO'
             self.warning()
         else:
+            print('')
             self.date_hour()
             self.cursor.execute(f"UPDATE services SET data_id = '{self.date}', data = '{self.current_date}', "
                                 f"situation = 'Finalizado', status = 'Em Rota' "
