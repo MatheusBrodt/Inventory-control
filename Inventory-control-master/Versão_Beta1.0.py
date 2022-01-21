@@ -2,7 +2,6 @@ import datetime
 from tkinter import *
 from tkinter import ttk
 
-import MySQLdb
 import mysql.connector
 
 print('\033[31mRODANDO O PROGRAMA!\033[m')
